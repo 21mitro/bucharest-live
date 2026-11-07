@@ -804,6 +804,17 @@ const routeCache = new Map();
 let allLines = null, tab = "tram", suggestIdx = -1;
 let selectedLine = null, selectedId = null, follow = false, query = "";
 let pitch3d = true, hexReady = false, mapReady = false, suggestItems = [];
+let markerJustClicked = false;
+
+function resetToOverview() {
+  map.easeTo({
+    center: [26.1025, 44.4268],
+    zoom: 13.4,
+    pitch: pitch3d ? 48 : 0,
+    bearing: -16,
+    duration: 750
+  });
+}
 
 const map = new maplibregl.Map({
   container: "map",
@@ -998,7 +1009,12 @@ function ingest(data) {
       const el = document.createElement("div");
       el.className = "v";
       el.innerHTML = '<i class="tick" aria-hidden="true"></i><span></span>';
-      el.addEventListener("click", (ev) => { ev.stopPropagation(); chooseVehicle(v.id); });
+      el.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        markerJustClicked = true;
+        setTimeout(() => { markerJustClicked = false; }, 350);
+        chooseVehicle(v.id);
+      });
       const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([v.lng, v.lat]).addTo(map);
       s = { id: v.id, marker, el, cur: [v.lng, v.lat], from: [v.lng, v.lat], to: [v.lng, v.lat], t0: now, line: "", type: "" };
       states.set(v.id, s);
@@ -1199,6 +1215,7 @@ function chooseLine(name, fit = true) {
 function chooseVehicle(id) {
   if (selectedId === id) {
     clearSelection();
+    resetToOverview();
     return;
   }
   const s = states.get(id);
@@ -1390,11 +1407,20 @@ $("q").addEventListener("keydown", (e) => {
 $("q").addEventListener("focus", renderSuggest);
 document.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
-  if (e.key === "Escape") { $("suggest").style.display = "none"; if (selectedLine) clearSelection(); }
+  if (e.key === "Escape") {
+    $("suggest").style.display = "none";
+    if (selectedLine) {
+      clearSelection();
+      resetToOverview();
+    }
+  }
 });
 
 // ─── CARD ACTIONS ───
-$("clear").addEventListener("click", clearSelection);
+$("clear").addEventListener("click", () => {
+  clearSelection();
+  resetToOverview();
+});
 $("fit").addEventListener("click", () => { if (selectedLine) showRoute(selectedLine, true); });
 $("follow").addEventListener("click", toggleFollow);
 
@@ -1413,9 +1439,16 @@ map.on("dragstart", () => {
   }
 });
 map.on("click", () => {
+  if (markerJustClicked) return;
   if ($("suggest").style.display === "flex") $("suggest").style.display = "none";
   $("q").blur();
   if ($("sheet").style.display === "flex") closeSheet();
+
+  // Tap anywhere on the map to deselect and return to overview
+  if (selectedLine || selectedId) {
+    clearSelection();
+    resetToOverview();
+  }
 });
 
 // ─── SHEET (LINES & VEHICLES DIALOG) ───
@@ -1508,15 +1541,8 @@ $("bMap").addEventListener("click", () => {
   if (follow) stopFollow();
   if (selectedLine || selectedId) {
     clearSelection();
-  } else {
-    map.easeTo({
-      center: [26.1025, 44.4268],
-      zoom: 13.4,
-      pitch: pitch3d ? 48 : 0,
-      bearing: -16,
-      duration: 750
-    });
   }
+  resetToOverview();
   $("bMap").setAttribute("aria-pressed", "true");
   $("bLines").setAttribute("aria-pressed", "false");
 });
