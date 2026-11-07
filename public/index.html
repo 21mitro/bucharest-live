@@ -22,123 +22,680 @@
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{
-  --bg:#0c0e12;--ink:#f2f4f8;--muted:rgba(242,244,248,.62);
-  --glass:rgba(14,16,22,.78);--line:rgba(255,255,255,.1);
-  --tram:#ff4d6d;--trolleybus:#1fb97a;--bus:#4c8dff;--night:#8b6cff;--metro:#f0c14a;--other:#8b97a8;
-  --ms:1
+  --bg:#0c0e12;
+  --ink:#f2f4f8;
+  --muted:rgba(242,244,248,.65);
+  --line:rgba(255,255,255,.14);
+  --line-strong:rgba(255,255,255,.24);
+  --tram:#ff4d6d;
+  --trolleybus:#1fb97a;
+  --bus:#4c8dff;
+  --night:#8b6cff;
+  --metro:#f0c14a;
+  --other:#8b97a8;
+  --ms:1;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);font-family:Outfit,system-ui,sans-serif;color:var(--ink)}
+html,body{margin:0;height:100%;background:var(--bg);font-family:Outfit,system-ui,-apple-system,sans-serif;color:var(--ink);overflow:hidden}
 #map{position:absolute;inset:0;z-index:0}
 button,input{font:inherit;color:inherit}
-button{cursor:pointer}
+button{cursor:pointer;background:none;border:0;padding:0}
 button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-offset:2px}
-.g{background:var(--glass);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.35)}
-#top{position:absolute;z-index:5;isolation:isolate;left:14px;right:62px;top:max(14px,env(safe-area-inset-top));max-width:640px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-#top>*{pointer-events:auto}
-#finder{position:relative;z-index:5;max-width:420px}
-#chips{position:relative;z-index:1}
-#search{display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border-radius:16px;position:relative}
-#search svg{flex:none;opacity:.7}
-#search input{flex:1;min-width:0;background:none;border:0;font-size:16px;font-weight:500}
-#search input::placeholder{color:var(--muted)}
-#suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);display:none;flex-direction:column;padding:6px;border-radius:16px;max-height:280px;overflow:auto}
-#suggest button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:12px;padding:8px;text-align:left}
-#suggest button:hover,#suggest button[aria-selected=true]{background:rgba(255,255,255,.06)}
-#suggest b{min-width:46px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
-#suggest span{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.chip{flex:none;height:34px;border-radius:17px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--line)}
-.chip i{width:8px;height:8px;border-radius:50%}
-.chip em{font-style:normal;color:var(--muted);font-weight:600}
-.chip[aria-pressed=false]{opacity:.4}
-#status{align-self:flex-start;font-size:12px;font-weight:600;color:var(--muted);padding:4px 10px;border-radius:999px;background:rgba(14,16,22,.78);border:1px solid var(--line)}
-#bottom{position:absolute;z-index:2;left:14px;right:14px;bottom:max(16px,env(safe-area-inset-bottom));max-width:480px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
-#bottom>*{pointer-events:auto}
-#card{display:none;gap:12px;align-items:flex-start;border-radius:20px;padding:12px}
-#cardBadge{min-width:52px;height:44px;padding:0 10px;border-radius:12px;color:#fff;font-weight:700;font-size:20px;letter-spacing:-.04em;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
-#cardTitle{font-size:15px;font-weight:700;letter-spacing:-.02em}
-#cardSub,#cardMeta{font-size:13px;color:var(--muted);margin-top:2px}
-#cardMeta{color:var(--ink)}
-.card-actions{display:flex;flex-direction:column;gap:6px}
-.card-actions button{height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-weight:600;font-size:13px}
-.card-actions button[aria-pressed=true]{background:#fff;color:#12141a}
-#nav{height:56px;border-radius:18px;padding:6px;display:flex;gap:4px}
-#nav button{flex:1;border:0;border-radius:13px;background:transparent;font-weight:600;font-size:14px}
-#nav button[aria-pressed=true]{background:rgba(255,255,255,.1)}
-#sheet{position:absolute;z-index:3;left:14px;right:14px;bottom:88px;max-width:480px;max-height:min(62vh,560px);display:none;flex-direction:column;border-radius:20px;padding:12px}
-#tabs{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
-#tabs button{flex:none;border:0;border-radius:12px;height:32px;padding:0 12px;background:rgba(255,255,255,.05);font-weight:600;font-size:13px;color:var(--muted)}
-#tabs button[aria-selected=true]{color:#fff}
-#list{overflow:auto;display:flex;flex-direction:column;gap:2px}
-.ln{display:flex;align-items:center;gap:10px;width:100%;height:46px;border:0;border-radius:12px;background:transparent;padding:0 6px;text-align:left}
-.ln:hover,.ln.active{background:rgba(255,255,255,.06)}
-.ln b{min-width:52px;height:28px;padding:0 8px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;letter-spacing:-.03em}
-.ln span{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ln em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted);min-width:18px;text-align:right}
-.ln.off{opacity:.38}
-#sheetNote{font-size:12px;color:var(--muted);padding:8px 6px 2px}
-.v{pointer-events:auto;cursor:pointer;user-select:none;-webkit-user-select:none}
-.v>span{
-  display:flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:7px;
-  font-weight:700;font-size:13px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:#fff;line-height:1;
-  box-shadow:0 0 0 1px rgba(0,0,0,.72),0 4px 10px rgba(0,0,0,.38);
-  transform:scale(var(--ms));transform-origin:center;transition:transform .2s,opacity .2s,box-shadow .2s
+
+/* ─── LIQUID GLASS DESIGN SYSTEM (Rich, semi-opaque, not overly transparent) ─── */
+.liquid-glass, .g {
+  background: linear-gradient(145deg, rgba(20, 25, 36, 0.91) 0%, rgba(13, 16, 24, 0.94) 100%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(106%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(106%);
+  border: 1px solid var(--line);
+  box-shadow: 
+    0 18px 45px -8px rgba(0, 0, 0, 0.72),
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5);
+  position: relative;
 }
-.v .tick{display:none;position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3px 0 0 -4px;background:#fff;clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 1px 1px rgba(0,0,0,.75));transform:rotate(var(--b,0deg)) translateY(-17px)}
-body.near .v.on .tick{display:block}
-.v.dim>span{opacity:.2;transform:scale(calc(var(--ms) * .9));box-shadow:none}
-.v.focus>span{transform:scale(calc(var(--ms) * 1.12));box-shadow:0 0 0 2px #fff,0 6px 16px rgba(0,0,0,.45)}
-.maplibregl-ctrl-group{background:rgba(14,16,22,.9)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:12px!important;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)!important}
-.maplibregl-ctrl-group button{filter:invert(1);opacity:.88}
-.maplibregl-ctrl-group button+button{border-top:1px solid rgba(255,255,255,.12)!important}
-.maplibregl-ctrl-attrib{background:rgba(12,14,18,.72)!important;color:rgba(255,255,255,.62)!important;font-size:11px}
-.maplibregl-ctrl-attrib a{color:#fff!important}
-@media (prefers-reduced-motion:reduce){.v>span{transition:none}}
+.liquid-glass::before, .g::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 42%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ─── TOP HEADER / SEARCH ─── */
+#top {
+  position: absolute;
+  z-index: 5;
+  isolation: isolate;
+  left: 14px;
+  right: 68px;
+  top: max(14px, env(safe-area-inset-top));
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+#top > * { pointer-events: auto }
+@media (min-width: 680px) {
+  #top {
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(480px, calc(100% - 28px));
+    right: auto;
+  }
+}
+#finder { position: relative; z-index: 5; width: 100% }
+#search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 16px;
+}
+#search svg { flex: none; opacity: .75 }
+#search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+}
+#search input::placeholder { color: var(--muted) }
+#suggest {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 6px);
+  display: none;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 16px;
+  max-height: 280px;
+  overflow: auto;
+}
+#suggest button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: left;
+  transition: background .15s;
+}
+#suggest button:hover, #suggest button[aria-selected=true] { background: rgba(255,255,255,.08) }
+#suggest b {
+  min-width: 46px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+}
+#suggest span {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#chips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chip {
+  flex: none;
+  height: 34px;
+  border-radius: 17px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  transition: opacity .2s, transform .15s;
+}
+.chip:active { transform: scale(0.97) }
+.chip i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor }
+.chip em { font-style: normal; color: var(--muted); font-weight: 600; margin-left: 2px }
+.chip[aria-pressed=false] { opacity: .42 }
+#status {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 4px 11px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseDot 1.6s infinite;
+}
+
+/* ─── BOTTOM CONTAINER (Zero overlap, coordinated flex stack) ─── */
+#bottom {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, calc(100% - 24px));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+#bottom > * { pointer-events: auto }
+
+/* ─── SHEET PANEL (Vehicles & Lines) ─── */
+#sheet {
+  max-height: min(58vh, 480px);
+  display: none;
+  flex-direction: column;
+  border-radius: 20px;
+  padding: 12px 14px;
+  animation: sheetPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sheetPop {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sheet-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.sheet-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+.sheet-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#sheetClose {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: all .15s;
+}
+#sheetClose:hover {
+  background: rgba(255,255,255,.14);
+  color: #fff;
+}
+#tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#tabs button {
+  flex: none;
+  border-radius: 12px;
+  height: 32px;
+  padding: 0 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  transition: all .16s;
+}
+#tabs button:hover {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+}
+#tabs button[aria-selected=true] {
+  color: #fff;
+  border-color: rgba(255,255,255,.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+#list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 2px;
+  flex: 1;
+  min-height: 120px;
+}
+.ln {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  background: transparent;
+  padding: 0 8px;
+  text-align: left;
+  border: 1px solid transparent;
+  transition: background .15s, border-color .15s;
+}
+.ln:hover, .ln.active {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.1);
+}
+.ln b {
+  min-width: 52px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.ln span {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ln em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 18px;
+  text-align: right;
+}
+.ln.off { opacity: .4 }
+#sheetNote {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 6px 4px 2px;
+  flex-shrink: 0;
+}
+
+/* ─── ACTIVE VEHICLE / ROUTE CARD ─── */
+#card {
+  display: none;
+  border-radius: 18px;
+  padding: 10px 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  animation: cardIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+#cardBadge {
+  min-width: 48px;
+  height: 42px;
+  padding: 0 8px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 3px 10px rgba(0,0,0,.4);
+  flex-shrink: 0;
+}
+.card-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#cardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+#cardSub {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+#cardMeta {
+  font-size: 11px;
+  color: rgba(242,244,248,.84);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.card-actions button {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.07);
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  transition: all .16s;
+  user-select: none;
+}
+.card-actions button:hover {
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.24);
+}
+.card-actions button:active {
+  transform: scale(0.96);
+}
+#follow[aria-pressed="true"] {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(37,99,235,.6);
+}
+#followDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-block;
+}
+#follow[aria-pressed="true"] #followDot {
+  animation: pulseDot 1s infinite;
+}
+@keyframes pulseDot {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.6; }
+}
+#clear {
+  width: 32px;
+  height: 34px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* ─── BOTTOM NAV BAR (Liquid Glass Bar) ─── */
+#nav {
+  height: 56px;
+  border-radius: 20px;
+  padding: 5px;
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+#nav button {
+  flex: 1;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+#nav button:hover {
+  color: #fff;
+  background: rgba(255,255,255,.06);
+}
+#nav button:active {
+  transform: scale(0.97);
+}
+#nav button[aria-pressed="true"], #nav button.active {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.nav-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  margin-left: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── MAP MARKERS & LIBRE STYLES ─── */
+.v { pointer-events: auto; cursor: pointer; user-select: none; -webkit-user-select: none }
+.v > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  line-height: 1;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.75), 0 4px 12px rgba(0,0,0,.45);
+  transform: scale(var(--ms));
+  transform-origin: center;
+  transition: transform .2s, opacity .2s, box-shadow .2s;
+}
+.v .tick {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -4px;
+  background: #fff;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.75));
+  transform: rotate(var(--b, 0deg)) translateY(-17px);
+}
+body.near .v.on .tick { display: block }
+.v.dim > span { opacity: .2; transform: scale(calc(var(--ms) * .9)); box-shadow: none }
+.v.focus > span {
+  transform: scale(calc(var(--ms) * 1.14));
+  box-shadow: 0 0 0 2px #fff, 0 6px 18px rgba(0,0,0,.6);
+}
+
+.maplibregl-ctrl-group {
+  background: rgba(18,22,32,.92)!important;
+  border: 1px solid rgba(255,255,255,.14)!important;
+  border-radius: 14px!important;
+  overflow: hidden;
+  box-shadow: 0 8px 26px rgba(0,0,0,.5)!important;
+}
+.maplibregl-ctrl-group button { filter: invert(1); opacity: .88 }
+.maplibregl-ctrl-group button + button { border-top: 1px solid rgba(255,255,255,.12)!important }
+.maplibregl-ctrl-attrib {
+  background: rgba(12,14,20,.82)!important;
+  color: rgba(255,255,255,.62)!important;
+  font-size: 11px;
+  border-radius: 8px!important;
+  margin: 0 6px 6px 0!important;
+}
+.maplibregl-ctrl-attrib a { color: #fff!important }
+.maplibregl-ctrl-bottom-right { bottom: 74px !important }
+@media (prefers-reduced-motion:reduce){ .v>span { transition: none } }
 </style>
 </head>
 <body>
 <div id="map"></div>
+
+<!-- Top header bar & search -->
 <div id="top">
   <div id="finder">
-    <label id="search" class="g">
+    <label id="search" class="liquid-glass">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
       <input id="q" type="search" placeholder="Caută linia, ex. 41" autocomplete="off" aria-label="Caută o linie" role="combobox" aria-expanded="false" aria-controls="suggest">
     </label>
-    <div id="suggest" class="g" role="listbox"></div>
+    <div id="suggest" class="liquid-glass" role="listbox"></div>
   </div>
   <div id="chips"></div>
-  <div id="status" role="status">Se conectează…</div>
+  <div id="status" class="liquid-glass" role="status">
+    <span class="live-dot"></span>
+    <span id="statusText">Se conectează…</span>
+  </div>
 </div>
-<div id="sheet" class="g" role="dialog" aria-label="Linii">
-  <div id="tabs" role="tablist"></div>
-  <div id="list"></div>
-  <div id="sheetNote"></div>
-</div>
+
+<!-- Coordinated Bottom Container (Zero overlap) -->
 <div id="bottom">
-  <div id="card" class="g">
-    <div id="cardBadge">41</div>
-    <div style="flex:1;min-width:0">
-      <div id="cardTitle"></div>
-      <div id="cardSub"></div>
-      <div id="cardMeta"></div>
+  <!-- Vehicle & Lines Sheet Dialog -->
+  <div id="sheet" class="liquid-glass" role="dialog" aria-label="Vehicule și Linii">
+    <div class="sheet-top">
+      <div class="sheet-header-row">
+        <span class="sheet-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="15" rx="3"></rect>
+            <path d="M3 9h18"></path>
+            <circle cx="7.5" cy="14" r="1.5"></circle>
+            <circle cx="16.5" cy="14" r="1.5"></circle>
+          </svg>
+          Linii &amp; Vehicule Live
+        </span>
+        <button id="sheetClose" type="button" aria-label="Închide">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="tabs" role="tablist"></div>
+    </div>
+    <div id="list"></div>
+    <div id="sheetNote"></div>
+  </div>
+
+  <!-- Active Vehicle / Route Card -->
+  <div id="card" class="liquid-glass">
+    <div class="card-left">
+      <div id="cardBadge">41</div>
+      <div class="card-details">
+        <div id="cardTitle">Linia</div>
+        <div id="cardSub">Traseu</div>
+        <div id="cardMeta">Vehicule live</div>
+      </div>
     </div>
     <div class="card-actions">
-      <button id="fit" type="button">Traseu</button>
-      <button id="follow" type="button" aria-pressed="false">Urmărește</button>
-      <button id="clear" type="button">Șterge</button>
+      <button id="fit" type="button" title="Vezi traseul complet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        <span>Traseu</span>
+      </button>
+      <button id="follow" type="button" aria-pressed="false" title="Urmărește camera cu vehiculul">
+        <span id="followDot"></span>
+        <span id="followText">Urmărește</span>
+      </button>
+      <button id="clear" type="button" title="Închide selecția">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
   </div>
-  <div id="nav" class="g">
-    <button id="bMap" type="button" aria-pressed="true">Hartă</button>
-    <button id="bLines" type="button" aria-pressed="false">Linii</button>
-    <button id="b3d" type="button" aria-pressed="true">3D</button>
+
+  <!-- Liquid Glass Bottom Bar (Hartă, Vehicule, 3D) -->
+  <div id="nav" class="liquid-glass">
+    <button id="bMap" type="button" aria-pressed="true" title="Hartă">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+        <line x1="8" y1="2" x2="8" y2="18"></line>
+        <line x1="16" y1="6" x2="16" y2="22"></line>
+      </svg>
+      <span>Hartă</span>
+    </button>
+    <button id="bLines" type="button" aria-pressed="false" title="Linii &amp; Vehicule">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="15" rx="3"></rect>
+        <path d="M3 9h18"></path>
+        <circle cx="7.5" cy="14" r="1.5"></circle>
+        <circle cx="16.5" cy="14" r="1.5"></circle>
+      </svg>
+      <span>Vehicule</span>
+      <span id="navCount" class="nav-count">0</span>
+    </button>
+    <button id="b3d" type="button" aria-pressed="true" title="Comută perspectivă 3D / 2D">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <span id="label3d">3D</span>
+    </button>
   </div>
 </div>
+
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
-const POLL_MS = 15000, TWEEN_MS = 18000, HEX_R = 280, MISS_LIMIT = 3;
+// Upstream TPBI updates every 5s; poll every 5s with smooth 5.8s tweening
+const POLL_MS = 5000, TWEEN_MS = 5800, HEX_R = 280, MISS_LIMIT = 4;
 const TYPES = {
   tram:       { label: "Tramvaie",   color: "#ff4d6d" },
   trolleybus: { label: "Troleibuze", color: "#1fb97a" },
@@ -158,8 +715,13 @@ let selectedLine = null, selectedId = null, follow = false, query = "";
 let pitch3d = true, hexReady = false, mapReady = false, suggestItems = [];
 
 const map = new maplibregl.Map({
-  container: "map", style: STYLE_URL,
-  center: [26.1025, 44.4268], zoom: 13.4, pitch: 48, bearing: -16, maxPitch: 72,
+  container: "map",
+  style: STYLE_URL,
+  center: [26.1025, 44.4268],
+  zoom: 13.4,
+  pitch: 48,
+  bearing: -16,
+  maxPitch: 72,
   attributionControl: { compact: true }
 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
@@ -168,7 +730,12 @@ map.addControl(new maplibregl.GeolocateControl({
   trackUserLocation: true,
   showUserHeading: true
 }), "top-right");
-map.on("error", (e) => { if (!states.size) $("status").textContent = "Eroare hartă: " + (e.error?.message || "necunoscută"); });
+map.on("error", (e) => {
+  if (!states.size) {
+    const st = $("statusText");
+    if (st) st.textContent = "Eroare hartă: " + (e.error?.message || "necunoscută");
+  }
+});
 
 const LAT0 = 44.43, LNG0 = 26.10, MX = 111320 * Math.cos(LAT0 * Math.PI / 180), MY = 110574, S3 = Math.sqrt(3);
 function hexOf(lng, lat) {
@@ -227,6 +794,7 @@ function tuneDark() {
     paint(id, "text-halo-width", 1.3);
   }
 }
+
 map.on("load", () => {
   tuneDark();
   const firstSymbol = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
@@ -248,6 +816,7 @@ map.on("load", () => {
   applyFilters();
   if (selectedLine) showRoute(selectedLine, false);
 });
+
 map.on("zoom", syncScale);
 function syncScale() {
   const z = map.getZoom();
@@ -297,7 +866,7 @@ function paintMarker(s) {
   s.el.classList.toggle("dim", !!selectedLine && !on);
   s.el.classList.toggle("on", on);
   s.el.classList.toggle("focus", on && s.id === selectedId);
-  s.el.style.zIndex = s.id === selectedId ? "3" : on ? "2" : "1";
+  s.el.style.zIndex = s.id === selectedId ? "4" : on ? "3" : "1";
   if (s.bearing != null) s.el.style.setProperty("--b", ((s.bearing % 360) + 360) % 360 + "deg");
 }
 
@@ -319,7 +888,9 @@ function ingest(data) {
       if (v.bearing == null && moved > 0.00015) {
         v.bearing = (Math.atan2(v.lng - s.to[0], v.lat - s.to[1]) * 180 / Math.PI + 360) % 360;
       }
-      s.from = s.cur.slice(); s.to = [v.lng, v.lat]; s.t0 = now;
+      s.from = s.cur.slice();
+      s.to = [v.lng, v.lat];
+      s.t0 = now;
     }
     s.miss = 0;
     Object.assign(s, {
@@ -335,27 +906,44 @@ function ingest(data) {
     if (s.miss >= MISS_LIMIT) {
       s.marker.remove();
       states.delete(id);
-      if (selectedId === id) selectedId = null;
+      if (selectedId === id) {
+        selectedId = null;
+        stopFollow();
+      }
     }
   }
   refreshCounts();
   applyFilters();
-  if (follow) track();
-  const age = data.updated ? Math.max(0, Math.round((Date.now() - new Date(data.updated).getTime()) / 1000)) : null;
-  const late = age != null && age > 45;
-  $("status").textContent = late
-    ? `Date întârziate · ${states.size} vehicule · ${age}s`
-    : `Live · ${states.size} vehicule · ${new Date().toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })}`;
+  $("navCount").textContent = String(data.count || states.size);
+  const st = $("statusText");
+  if (st) {
+    st.textContent = `Live · ${states.size} vehicule · ${new Date().toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+  }
 }
 
+// ─── SMOOTH RAF LOOP & SYNCHRONOUS CAMERA TRACKING ───
 function frame(now) {
   for (const s of states.values()) {
     const p = Math.min(1, (now - s.t0) / TWEEN_MS);
-    if (p < 1 || s.cur[0] !== s.to[0]) {
-      s.cur = [s.from[0] + (s.to[0] - s.from[0]) * p, s.from[1] + (s.to[1] - s.from[1]) * p];
+    if (p < 1 || s.cur[0] !== s.to[0] || s.cur[1] !== s.to[1]) {
+      s.cur = [
+        s.from[0] + (s.to[0] - s.from[0]) * p,
+        s.from[1] + (s.to[1] - s.from[1]) * p
+      ];
       s.marker.setLngLat(s.cur);
     }
   }
+
+  // Camera glides at the EXACT same time as the vehicle
+  if (follow && selectedId) {
+    const s = states.get(selectedId);
+    if (s && s.cur) {
+      map.jumpTo({ center: s.cur });
+    } else {
+      stopFollow();
+    }
+  }
+
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -394,15 +982,22 @@ function applyFilters() {
     if (s.id === selectedId) focused = s;
   }
   const card = $("card");
+  const sheetOpen = $("sheet").style.display === "flex";
+
   if (!selectedLine) {
     card.style.display = "none";
-    follow = false;
-    $("follow").setAttribute("aria-pressed", "false");
-    $("follow").textContent = "Urmărește";
+    stopFollow();
     updateHex();
-    if ($("sheet").style.display === "flex") renderSheet();
+    if (sheetOpen) renderSheet();
     return;
   }
+
+  // If the lines sheet is currently open, keep the card hidden so they don't overlap
+  if (sheetOpen) {
+    card.style.display = "none";
+    return;
+  }
+
   const sample = focused || lineVehicles(selectedLine)[0];
   const type = sample?.type || typeOfLine(selectedLine);
   const t = TYPES[type] || TYPES.other;
@@ -420,12 +1015,16 @@ function applyFilters() {
   $("cardTitle").textContent = title;
   $("cardSub").textContent = long ? termini(long) : (count ? `${count} pe hartă` : "Fără traseu desenat");
   const live = `${count} ${count === 1 ? "vehicul live" : "vehicule live"}`;
-  $("cardMeta").textContent = focused ? vehicleLine(focused) : (count ? `${live} · atinge un număr de pe hartă` : "Niciun vehicul live acum");
-  $("follow").disabled = !focused;
-  $("follow").style.opacity = focused ? "1" : ".4";
+  $("cardMeta").textContent = focused ? vehicleLine(focused) : (count ? `${live} · atinge un vehicul pe hartă` : "Niciun vehicul live acum");
+  
+  const followBtn = $("follow");
+  followBtn.disabled = !focused;
+  followBtn.style.opacity = focused ? "1" : ".45";
+  followBtn.style.pointerEvents = focused ? "auto" : "none";
+  updateFollowUI();
+
   card.style.display = "flex";
   updateHex();
-  if ($("sheet").style.display === "flex") renderSheet();
 }
 
 function typeOfLine(name) {
@@ -462,7 +1061,7 @@ async function showRoute(name, fit) {
   let n = 0;
   for (const f of features) for (const c of f.geometry.coordinates) { b.extend(c); n++; }
   for (const s of lineVehicles(name)) { b.extend(s.cur); n++; }
-  if (n) map.fitBounds(b, { padding: { top: 150, bottom: 230, left: 48, right: 56 }, maxZoom: 15.2, duration: 1100 });
+  if (n) map.fitBounds(b, { padding: { top: 140, bottom: 200, left: 40, right: 40 }, maxZoom: 15.2, duration: 900 });
 }
 
 function clearRoute() {
@@ -473,12 +1072,11 @@ function chooseLine(name, fit = true) {
   if (!name) return clearSelection();
   selectedLine = name;
   selectedId = null;
-  follow = false;
-  $("follow").setAttribute("aria-pressed", "false");
-  $("follow").textContent = "Urmărește";
+  stopFollow();
   applyFilters();
   showRoute(name, fit);
 }
+
 function chooseVehicle(id) {
   if (selectedId === id) {
     clearSelection();
@@ -489,18 +1087,17 @@ function chooseVehicle(id) {
   const sameLine = selectedLine === s.line;
   selectedLine = s.line;
   selectedId = id;
-  follow = false;
-  $("follow").setAttribute("aria-pressed", "false");
-  $("follow").textContent = "Urmărește";
+  stopFollow();
   applyFilters();
   if (!sameLine) showRoute(s.line, false);
   const zoom = map.getZoom();
-  map.easeTo({ center: s.cur, zoom: zoom < 14 ? 15 : zoom, duration: 700 });
+  map.easeTo({ center: s.cur, zoom: zoom < 14.5 ? 15.2 : zoom, duration: 600 });
 }
+
 function clearSelection() {
   selectedLine = null;
   selectedId = null;
-  follow = false;
+  stopFollow();
   if (query) {
     query = "";
     $("q").value = "";
@@ -508,10 +1105,35 @@ function clearSelection() {
   clearRoute();
   applyFilters();
 }
-function track() {
-  const s = states.get(selectedId);
-  if (!s) { follow = false; return; }
-  map.easeTo({ center: s.cur, duration: 900, easing: (t) => t });
+
+// ─── FOLLOW VEHICLE CONTROLS ───
+function toggleFollow() {
+  if (!selectedId) return;
+  follow = !follow;
+  updateFollowUI();
+  if (follow) {
+    const s = states.get(selectedId);
+    if (s) {
+      const z = map.getZoom();
+      if (z < 15) {
+        map.easeTo({ center: s.cur, zoom: 15.6, duration: 550 });
+      } else {
+        map.jumpTo({ center: s.cur });
+      }
+    }
+  }
+}
+function stopFollow() {
+  if (!follow) return;
+  follow = false;
+  updateFollowUI();
+}
+function updateFollowUI() {
+  const btn = $("follow");
+  if (!btn) return;
+  btn.setAttribute("aria-pressed", String(follow));
+  const text = $("followText");
+  if (text) text.textContent = follow ? "Urmărit" : "Urmărește";
 }
 
 function catalog() {
@@ -583,27 +1205,38 @@ function refreshCounts() {
   }
 }
 
+// ─── LIVE DATA POLLING (Fast 5s intervals) ───
 async function poll() {
   try {
     const d = await (await fetch("/api/vehicles")).json();
-    if (d.error && !d.vehicles.length) throw new Error(d.error);
+    if (d.error && !d.vehicles?.length) throw new Error(d.error);
     ingest(d);
-  } catch (e) { $("status").textContent = "Nu pot lua datele live: " + e.message; }
+  } catch (e) {
+    const st = $("statusText");
+    if (st) st.textContent = "Reconectare live: " + e.message;
+  }
 }
 poll();
 setInterval(poll, POLL_MS);
 loadLines();
 
+// ─── CHIPS (Vehicle type filters) ───
 for (const k of ["tram", "trolleybus", "bus", "night"]) {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = "chip g";
+  b.className = "chip liquid-glass";
   b.dataset.type = k;
   b.setAttribute("aria-pressed", "true");
   b.innerHTML = `<i style="background:${TYPES[k].color}"></i>${TYPES[k].label} <em>0</em>`;
-  b.addEventListener("click", () => { typeOn[k] = !typeOn[k]; b.setAttribute("aria-pressed", String(typeOn[k])); applyFilters(); });
+  b.addEventListener("click", () => {
+    typeOn[k] = !typeOn[k];
+    b.setAttribute("aria-pressed", String(typeOn[k]));
+    applyFilters();
+  });
   $("chips").appendChild(b);
 }
+
+// ─── SEARCH INPUT EVENTS ───
 $("q").addEventListener("input", (e) => {
   query = e.target.value.trim().toLowerCase();
   applyFilters();
@@ -629,43 +1262,55 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
   if (e.key === "Escape") { $("suggest").style.display = "none"; if (selectedLine) clearSelection(); }
 });
+
+// ─── CARD ACTIONS ───
 $("clear").addEventListener("click", clearSelection);
 $("fit").addEventListener("click", () => { if (selectedLine) showRoute(selectedLine, true); });
-$("follow").addEventListener("click", () => {
-  if (!selectedId) return;
-  follow = !follow;
-  $("follow").setAttribute("aria-pressed", String(follow));
-  $("follow").textContent = follow ? "Oprește" : "Urmărește";
-  if (follow) track();
-});
-$("b3d").addEventListener("click", (e) => {
+$("follow").addEventListener("click", toggleFollow);
+
+// ─── 3D PERSPECTIVE TOGGLE ───
+$("b3d").addEventListener("click", () => {
   pitch3d = !pitch3d;
-  e.currentTarget.setAttribute("aria-pressed", String(pitch3d));
-  map.easeTo({ pitch: pitch3d ? 48 : 0, duration: 800 });
+  $("b3d").setAttribute("aria-pressed", String(pitch3d));
+  $("label3d").textContent = pitch3d ? "3D" : "2D";
+  map.easeTo({ pitch: pitch3d ? 48 : 0, duration: 650 });
 });
+
+// ─── MAP USER GESTURES ───
 map.on("dragstart", () => {
-  if (!follow) return;
-  follow = false;
-  $("follow").setAttribute("aria-pressed", "false");
-  $("follow").textContent = "Urmărește";
+  // If user manually drags/pans map, gracefully disengage camera follow
+  if (follow) {
+    stopFollow();
+  }
 });
 map.on("click", () => {
   if ($("suggest").style.display === "flex") $("suggest").style.display = "none";
   $("q").blur();
   if ($("sheet").style.display === "flex") closeSheet();
-  if (selectedLine || selectedId) {
-    clearSelection();
-  }
 });
 
+// ─── SHEET (LINES & VEHICLES DIALOG) ───
 async function loadLines() {
   try { allLines = (await (await fetch("/api/lines")).json()).lines || {}; }
   catch { allLines = {}; }
 }
 async function openSheet() {
   if (!allLines) await loadLines();
+  // Hide active card while sheet is open so they never overlap
+  $("card").style.display = "none";
   renderSheet();
   $("sheet").style.display = "flex";
+  $("bLines").setAttribute("aria-pressed", "true");
+  $("bMap").setAttribute("aria-pressed", "false");
+}
+function closeSheet() {
+  $("sheet").style.display = "none";
+  $("bLines").setAttribute("aria-pressed", "false");
+  $("bMap").setAttribute("aria-pressed", "true");
+  // If a line is selected, restore its card
+  if (selectedLine) {
+    applyFilters();
+  }
 }
 function renderSheet() {
   const live = new Map();
@@ -700,31 +1345,55 @@ function renderSheet() {
     const count = document.createElement("em");
     count.textContent = n ? String(n) : "–";
     b.append(badge, sub, count);
-    b.addEventListener("click", () => { closeSheet(); chooseLine(l.name, true); });
+    b.addEventListener("click", () => {
+      closeSheet();
+      const vList = lineVehicles(l.name);
+      if (vList.length === 1) {
+        chooseVehicle(vList[0].id);
+      } else {
+        chooseLine(l.name, true);
+      }
+    });
     $("list").appendChild(b);
   }
   if (!rows.length) {
     const empty = document.createElement("div");
-    empty.style.cssText = "padding:10px 6px;color:var(--muted);font-size:13px";
-    empty.textContent = "Nicio linie pentru căutarea asta.";
+    empty.style.cssText = "padding:16px 8px;color:var(--muted);font-size:13px;text-align:center";
+    empty.textContent = "Nicio linie găsită pentru căutarea curentă.";
     $("list").appendChild(empty);
   }
   $("sheetNote").textContent = tab === "metro"
-    ? "Metroul nu publică poziții live în feed-ul TPBI."
-    : "Numărul din dreapta e câte vehicule sunt pe hartă acum.";
+    ? "Metroul nu publică poziții GPS live în feed-ul TPBI."
+    : "Atinge o linie pentru a o afișa pe hartă. Numărul indică vehiculele active.";
 }
-function closeSheet() {
-  $("sheet").style.display = "none";
-  $("bLines").setAttribute("aria-pressed", "false");
-  $("bMap").setAttribute("aria-pressed", "true");
-}
+
+// ─── BOTTOM NAV BAR EVENTS ───
+$("sheetClose").addEventListener("click", closeSheet);
 $("bLines").addEventListener("click", () => {
-  if ($("sheet").style.display === "flex") return closeSheet();
-  $("bLines").setAttribute("aria-pressed", "true");
-  $("bMap").setAttribute("aria-pressed", "false");
-  openSheet();
+  if ($("sheet").style.display === "flex") {
+    closeSheet();
+  } else {
+    openSheet();
+  }
 });
-$("bMap").addEventListener("click", closeSheet);
+$("bMap").addEventListener("click", () => {
+  closeSheet();
+  if (follow) stopFollow();
+  if (selectedLine || selectedId) {
+    clearSelection();
+  } else {
+    // Return smoothly to default Bucharest overview
+    map.easeTo({
+      center: [26.1025, 44.4268],
+      zoom: 13.4,
+      pitch: pitch3d ? 48 : 0,
+      bearing: -16,
+      duration: 750
+    });
+  }
+  $("bMap").setAttribute("aria-pressed", "true");
+  $("bLines").setAttribute("aria-pressed", "false");
+});
 </script>
 </body>
 </html>

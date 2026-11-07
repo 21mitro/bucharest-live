@@ -11,7 +11,7 @@ const rateLimit = require("express-rate-limit");
 // Official TPBI open data (see mo-bi.ro -> Source Code and Open Data for terms of use)
 const STATIC_URL = "https://gtfs.tpbi.ro/regional/BUCHAREST-REGION.zip";
 const VEHICLES_URL = "https://gtfs.tpbi.ro/api/gtfs-rt/vehiclePositions";
-const POLL_MS = 20_000;
+const POLL_MS = 5_000;
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data");
 const LINES_FILE = path.join(DATA_DIR, "lines.json");
@@ -233,11 +233,21 @@ async function loadStatic() {
 }
 
 const STOP_STATUS = { 0: "incoming", 1: "stopped", 2: "transit" };
+let lastEtag = null;
 
 async function pollVehicles() {
   try {
-    const res = await fetch(VEHICLES_URL);
+    const headers = {};
+    if (lastEtag) headers["If-None-Match"] = lastEtag;
+    const res = await fetch(VEHICLES_URL, { headers });
+    if (res.status === 304) {
+      lastUpdate = new Date().toISOString();
+      lastError = null;
+      return;
+    }
     if (!res.ok) throw new Error("Vehicle feed HTTP " + res.status);
+    const etag = res.headers.get("etag");
+    if (etag) lastEtag = etag;
     const feed = GtfsRt.transit_realtime.FeedMessage.decode(new Uint8Array(await res.arrayBuffer()));
     vehicles = feed.entity
       .filter((e) => e.vehicle && e.vehicle.position)
@@ -332,10 +342,10 @@ app.use(
   })
 );
 
-// 4. Rate limiting – 120 req / min per IP for the API
+// 4. Rate limiting – 300 req / min per IP for the API
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 120,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Prea multe cereri, reîncearcă mai târziu." },
@@ -351,6 +361,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // ─── API ROUTES ─────────────────────────────────────────────────────
 app.get("/api/vehicles", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.json({ updated: lastUpdate, error: lastError, count: vehicles.length, vehicles });
 });
 app.get("/api/lines", (req, res) => {
