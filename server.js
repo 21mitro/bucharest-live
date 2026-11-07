@@ -301,6 +301,7 @@ app.use(
           "https://tiles.openfreemap.org",
           "https://*.openfreemap.org",
         ],
+        manifestSrc: ["'self'"],
         workerSrc: ["'self'", "blob:"],
         childSrc: ["'self'", "blob:"],
         objectSrc: ["'none'"],
