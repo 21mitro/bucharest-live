@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c0e12">
+<meta name="color-scheme" content="dark">
+<title>București Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{
+  --bg:#0c0e12;--ink:#f2f4f8;--muted:rgba(242,244,248,.62);
+  --glass:rgba(14,16,22,.78);--line:rgba(255,255,255,.1);
+  --tram:#ff4d6d;--trolleybus:#1fb97a;--bus:#4c8dff;--night:#8b6cff;--metro:#f0c14a;--other:#8b97a8;
+  --ms:1
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);font-family:Outfit,system-ui,sans-serif;color:var(--ink)}
+#map{position:absolute;inset:0;z-index:0}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-offset:2px}
+.g{background:var(--glass);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#top{position:absolute;z-index:5;isolation:isolate;left:14px;right:62px;top:max(14px,env(safe-area-inset-top));max-width:640px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#top>*{pointer-events:auto}
+#finder{position:relative;z-index:5;max-width:420px}
+#chips{position:relative;z-index:1}
+#search{display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border-radius:16px;position:relative}
+#search svg{flex:none;opacity:.7}
+#search input{flex:1;min-width:0;background:none;border:0;font-size:16px;font-weight:500}
+#search input::placeholder{color:var(--muted)}
+#suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);display:none;flex-direction:column;padding:6px;border-radius:16px;max-height:280px;overflow:auto}
+#suggest button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:12px;padding:8px;text-align:left}
+#suggest button:hover,#suggest button[aria-selected=true]{background:rgba(255,255,255,.06)}
+#suggest b{min-width:46px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+#suggest span{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.chip{flex:none;height:34px;border-radius:17px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;border:1px solid var(--line)}
+.chip i{width:8px;height:8px;border-radius:50%}
+.chip em{font-style:normal;color:var(--muted);font-weight:600}
+.chip[aria-pressed=false]{opacity:.4}
+#status{align-self:flex-start;font-size:12px;font-weight:600;color:var(--muted);padding:4px 10px;border-radius:999px;background:rgba(14,16,22,.78);border:1px solid var(--line)}
+#bottom{position:absolute;z-index:2;left:14px;right:14px;bottom:max(16px,env(safe-area-inset-bottom));max-width:480px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+#bottom>*{pointer-events:auto}
+#card{display:none;gap:12px;align-items:flex-start;border-radius:20px;padding:12px}
+#cardBadge{min-width:52px;height:44px;padding:0 10px;border-radius:12px;color:#fff;font-weight:700;font-size:20px;letter-spacing:-.04em;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+#cardTitle{font-size:15px;font-weight:700;letter-spacing:-.02em}
+#cardSub,#cardMeta{font-size:13px;color:var(--muted);margin-top:2px}
+#cardMeta{color:var(--ink)}
+.card-actions{display:flex;flex-direction:column;gap:6px}
+.card-actions button{height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-weight:600;font-size:13px}
+.card-actions button[aria-pressed=true]{background:#fff;color:#12141a}
+#nav{height:56px;border-radius:18px;padding:6px;display:flex;gap:4px}
+#nav button{flex:1;border:0;border-radius:13px;background:transparent;font-weight:600;font-size:14px}
+#nav button[aria-pressed=true]{background:rgba(255,255,255,.1)}
+#sheet{position:absolute;z-index:3;left:14px;right:14px;bottom:88px;max-width:480px;max-height:min(62vh,560px);display:none;flex-direction:column;border-radius:20px;padding:12px}
+#tabs{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none}
+#tabs button{flex:none;border:0;border-radius:12px;height:32px;padding:0 12px;background:rgba(255,255,255,.05);font-weight:600;font-size:13px;color:var(--muted)}
+#tabs button[aria-selected=true]{color:#fff}
+#list{overflow:auto;display:flex;flex-direction:column;gap:2px}
+.ln{display:flex;align-items:center;gap:10px;width:100%;height:46px;border:0;border-radius:12px;background:transparent;padding:0 6px;text-align:left}
+.ln:hover,.ln.active{background:rgba(255,255,255,.06)}
+.ln b{min-width:52px;height:28px;padding:0 8px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;letter-spacing:-.03em}
+.ln span{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted);min-width:18px;text-align:right}
+.ln.off{opacity:.38}
+#sheetNote{font-size:12px;color:var(--muted);padding:8px 6px 2px}
+.v{pointer-events:auto;cursor:pointer;user-select:none;-webkit-user-select:none}
+.v>span{
+  display:flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:7px;
+  font-weight:700;font-size:13px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:#fff;line-height:1;
+  box-shadow:0 0 0 1px rgba(0,0,0,.72),0 4px 10px rgba(0,0,0,.38);
+  transform:scale(var(--ms));transform-origin:center;transition:transform .2s,opacity .2s,box-shadow .2s
+}
+.v .tick{display:none;position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3px 0 0 -4px;background:#fff;clip-path:polygon(50% 0,100% 100%,0 100%);filter:drop-shadow(0 1px 1px rgba(0,0,0,.75));transform:rotate(var(--b,0deg)) translateY(-17px)}
+body.near .v.on .tick{display:block}
+.v.dim>span{opacity:.2;transform:scale(calc(var(--ms) * .9));box-shadow:none}
+.v.focus>span{transform:scale(calc(var(--ms) * 1.12));box-shadow:0 0 0 2px #fff,0 6px 16px rgba(0,0,0,.45)}
+.maplibregl-ctrl-group{background:rgba(14,16,22,.9)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:12px!important;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.35)!important}
+.maplibregl-ctrl-group button{filter:invert(1);opacity:.88}
+.maplibregl-ctrl-group button+button{border-top:1px solid rgba(255,255,255,.12)!important}
+.maplibregl-ctrl-attrib{background:rgba(12,14,18,.72)!important;color:rgba(255,255,255,.62)!important;font-size:11px}
+.maplibregl-ctrl-attrib a{color:#fff!important}
+@media (prefers-reduced-motion:reduce){.v>span{transition:none}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="top">
+  <div id="finder">
+    <label id="search" class="g">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="Caută linia, ex. 41" autocomplete="off" aria-label="Caută o linie" role="combobox" aria-expanded="false" aria-controls="suggest">
+    </label>
+    <div id="suggest" class="g" role="listbox"></div>
+  </div>
+  <div id="chips"></div>
+  <div id="status" role="status">Se conectează…</div>
+</div>
+<div id="sheet" class="g" role="dialog" aria-label="Linii">
+  <div id="tabs" role="tablist"></div>
+  <div id="list"></div>
+  <div id="sheetNote"></div>
+</div>
+<div id="bottom">
+  <div id="card" class="g">
+    <div id="cardBadge">41</div>
+    <div style="flex:1;min-width:0">
+      <div id="cardTitle"></div>
+      <div id="cardSub"></div>
+      <div id="cardMeta"></div>
+    </div>
+    <div class="card-actions">
+      <button id="fit" type="button">Traseu</button>
+      <button id="follow" type="button" aria-pressed="false">Urmărește</button>
+      <button id="clear" type="button">Șterge</button>
+    </div>
+  </div>
+  <div id="nav" class="g">
+    <button id="bMap" type="button" aria-pressed="true">Hartă</button>
+    <button id="bLines" type="button" aria-pressed="false">Linii</button>
+    <button id="b3d" type="button" aria-pressed="true">3D</button>
+  </div>
+</div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+const POLL_MS = 15000, TWEEN_MS = 18000, HEX_R = 280, MISS_LIMIT = 3;
+const TYPES = {
+  tram:       { label: "Tramvaie",   color: "#ff4d6d" },
+  trolleybus: { label: "Troleibuze", color: "#1fb97a" },
+  bus:        { label: "Autobuze",   color: "#4c8dff" },
+  night:      { label: "Nocturne",   color: "#8b6cff" },
+  metro:      { label: "Metrou",     color: "#f0c14a" },
+  other:      { label: "Altele",     color: "#8b97a8" }
+};
+const TYPE_ORDER = ["tram", "trolleybus", "bus", "night", "metro", "other"];
+const STATUS_RO = { incoming: "ajunge la", stopped: "în stația", transit: "către" };
+const $ = (id) => document.getElementById(id);
+const typeOn = { tram: true, trolleybus: true, bus: true, night: true, metro: true, other: true };
+const states = new Map();
+const routeCache = new Map();
+let allLines = null, tab = "tram", suggestIdx = -1;
+let selectedLine = null, selectedId = null, follow = false, query = "";
+let pitch3d = true, hexReady = false, mapReady = false, suggestItems = [];
+
+const map = new maplibregl.Map({
+  container: "map", style: STYLE_URL,
+  center: [26.1025, 44.4268], zoom: 13.4, pitch: 48, bearing: -16, maxPitch: 72,
+  attributionControl: { compact: true }
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+map.addControl(new maplibregl.GeolocateControl({
+  positionOptions: { enableHighAccuracy: true },
+  trackUserLocation: true,
+  showUserHeading: true
+}), "top-right");
+map.on("error", (e) => { if (!states.size) $("status").textContent = "Eroare hartă: " + (e.error?.message || "necunoscută"); });
+
+const LAT0 = 44.43, LNG0 = 26.10, MX = 111320 * Math.cos(LAT0 * Math.PI / 180), MY = 110574, S3 = Math.sqrt(3);
+function hexOf(lng, lat) {
+  const x = (lng - LNG0) * MX, y = (lat - LAT0) * MY;
+  const cx = (S3 / 3 * x - y / 3) / HEX_R, cz = (2 / 3 * y) / HEX_R, cy = -cx - cz;
+  let rx = Math.round(cx), ry = Math.round(cy), rz = Math.round(cz);
+  const dx = Math.abs(rx - cx), dy = Math.abs(ry - cy), dz = Math.abs(rz - cz);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  return [rx, rz];
+}
+function hexPoly(q, r) {
+  const cx = HEX_R * S3 * (q + r / 2), cy = HEX_R * 1.5 * r, pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI / 180 * (60 * i - 30);
+    pts.push([LNG0 + (cx + HEX_R * Math.cos(a)) / MX, LAT0 + (cy + HEX_R * Math.sin(a)) / MY]);
+  }
+  pts.push(pts[0]);
+  return [pts];
+}
+function paint(id, prop, value) {
+  if (map.getLayer(id)) map.setPaintProperty(id, prop, value);
+}
+function tuneDark() {
+  paint("background", "background-color", "#10141c");
+  paint("water", "fill-color", "#163044");
+  paint("waterway", "line-color", "#1e4d6e");
+  paint("landuse_residential", "fill-color", "#181d28");
+  paint("landuse_residential", "fill-opacity", 0.9);
+  paint("landuse_park", "fill-color", "#173028");
+  paint("landcover_wood", "fill-color", "#173028");
+  paint("landcover_wood", "fill-opacity", 0.85);
+  paint("building", "fill-color", "#222a38");
+  paint("building", "fill-outline-color", "#354156");
+  paint("highway_path", "line-color", "#323b4e");
+  paint("highway_minor", "line-color", "#4e596e");
+  paint("highway_major_casing", "line-color", "#0c1016");
+  paint("highway_major_inner", "line-color", "#9aa6ba");
+  paint("highway_major_subtle", "line-color", "#667388");
+  paint("highway_motorway_casing", "line-color", "#241c10");
+  paint("highway_motorway_inner", "line-color", "#e0c27a");
+  paint("highway_motorway_subtle", "line-color", "#9a7b45");
+  paint("railway", "line-color", "#6d5d6a");
+  paint("railway_transit", "line-color", "#6d5d6a");
+  paint("railway_minor", "line-color", "#5c5360");
+  paint("highway_name_other", "text-color", "#d5dce8");
+  paint("highway_name_other", "text-halo-color", "#10141c");
+  paint("highway_name_other", "text-halo-width", 1.2);
+  paint("highway_name_motorway", "text-color", "#f0e2bc");
+  paint("highway_name_motorway", "text-halo-color", "#10141c");
+  paint("highway_name_motorway", "text-halo-width", 1.2);
+  paint("water_name", "text-color", "#9ec3d6");
+  paint("water_name", "text-halo-color", "#10141c");
+  for (const id of ["place_other", "place_suburb", "place_village", "place_town", "place_city", "place_city_large"]) {
+    paint(id, "text-color", "#e7edf5");
+    paint(id, "text-halo-color", "#10141c");
+    paint(id, "text-halo-width", 1.3);
+  }
+}
+map.on("load", () => {
+  tuneDark();
+  const firstSymbol = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
+  map.addSource("hex", { type: "geojson", data: emptyFc() });
+  map.addLayer({ id: "hex-fill", type: "fill", source: "hex", paint: {
+    "fill-color": ["interpolate", ["linear"], ["get", "n"], 1, "#1d4e89", 4, "#6d5bd0", 10, "#ff7a45", 18, "#ff3d6e"],
+    "fill-opacity": 0.28 } }, firstSymbol);
+  map.addLayer({ id: "hex-line", type: "line", source: "hex", paint: {
+    "line-color": "rgba(255,255,255,0.16)", "line-width": 1 } }, firstSymbol);
+  map.addSource("route", { type: "geojson", data: emptyFc() });
+  map.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": "#07080c", "line-width": 7, "line-opacity": 0.85 } });
+  map.addLayer({ id: "route-line", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+    paint: { "line-color": ["get", "color"], "line-width": 3.5, "line-opacity": 0.92 } });
+  hexReady = true;
+  mapReady = true;
+  syncScale();
+  updateHex();
+  applyFilters();
+  if (selectedLine) showRoute(selectedLine, false);
+});
+map.on("zoom", syncScale);
+function syncScale() {
+  const z = map.getZoom();
+  const s = z < 12 ? 0.8 : z < 13.4 ? 0.9 : z < 15 ? 1 : 1.08;
+  document.documentElement.style.setProperty("--ms", String(s));
+  document.body.classList.toggle("near", z >= 13.5);
+  const showHex = !selectedLine && z < 13.2;
+  if (hexReady) {
+    const vis = showHex ? "visible" : "none";
+    map.setLayoutProperty("hex-fill", "visibility", vis);
+    map.setLayoutProperty("hex-line", "visibility", vis);
+  }
+}
+function emptyFc() { return { type: "FeatureCollection", features: [] }; }
+function updateHex() {
+  if (!hexReady) return;
+  const counts = new Map();
+  for (const s of states.values()) {
+    if (!isVisible(s)) continue;
+    const [q, r] = hexOf(s.cur[0], s.cur[1]), k = q + "," + r;
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  const features = [...counts].map(([k, n]) => {
+    const [q, r] = k.split(",").map(Number);
+    return { type: "Feature", properties: { n }, geometry: { type: "Polygon", coordinates: hexPoly(q, r) } };
+  });
+  map.getSource("hex").setData({ type: "FeatureCollection", features });
+  syncScale();
+}
+
+function colorOf(type) { return (TYPES[type] || TYPES.other).color; }
+function isVisible(s) {
+  if (selectedLine && s.line === selectedLine) return true;
+  if (typeOn[s.type] === false) return false;
+  if (query && !s.line.toLowerCase().includes(query)) return false;
+  return true;
+}
+function paintMarker(s) {
+  const t = TYPES[s.type] || TYPES.other;
+  const sp = s.el.querySelector("span");
+  sp.textContent = s.line;
+  sp.style.background = t.color;
+  sp.style.color = s.type === "metro" ? "#1a1404" : "#fff";
+  const on = !!selectedLine && s.line === selectedLine;
+  const show = isVisible(s);
+  s.el.style.display = show ? "" : "none";
+  s.el.classList.toggle("dim", !!selectedLine && !on);
+  s.el.classList.toggle("on", on);
+  s.el.classList.toggle("focus", on && s.id === selectedId);
+  s.el.style.zIndex = s.id === selectedId ? "3" : on ? "2" : "1";
+  if (s.bearing != null) s.el.style.setProperty("--b", ((s.bearing % 360) + 360) % 360 + "deg");
+}
+
+function ingest(data) {
+  const now = performance.now(), seen = new Set();
+  for (const v of data.vehicles) {
+    seen.add(v.id);
+    let s = states.get(v.id);
+    if (!s) {
+      const el = document.createElement("div");
+      el.className = "v";
+      el.innerHTML = '<i class="tick" aria-hidden="true"></i><span></span>';
+      el.addEventListener("click", (ev) => { ev.stopPropagation(); chooseVehicle(v.id); });
+      const marker = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([v.lng, v.lat]).addTo(map);
+      s = { id: v.id, marker, el, cur: [v.lng, v.lat], from: [v.lng, v.lat], to: [v.lng, v.lat], t0: now, line: "", type: "" };
+      states.set(v.id, s);
+    } else if (s.to[0] !== v.lng || s.to[1] !== v.lat) {
+      const moved = Math.hypot(v.lng - s.to[0], v.lat - s.to[1]);
+      if (v.bearing == null && moved > 0.00015) {
+        v.bearing = (Math.atan2(v.lng - s.to[0], v.lat - s.to[1]) * 180 / Math.PI + 360) % 360;
+      }
+      s.from = s.cur.slice(); s.to = [v.lng, v.lat]; s.t0 = now;
+    }
+    s.miss = 0;
+    Object.assign(s, {
+      line: v.line, type: v.type || "bus", long: v.long || "", headsign: v.headsign || "",
+      label: v.label || "", plate: v.plate || "", stop: v.stop || "", status: v.status || "",
+      speedKmh: v.speedKmh, bearing: v.bearing, ts: v.ts
+    });
+    paintMarker(s);
+  }
+  for (const [id, s] of states) {
+    if (seen.has(id)) continue;
+    s.miss = (s.miss || 0) + 1;
+    if (s.miss >= MISS_LIMIT) {
+      s.marker.remove();
+      states.delete(id);
+      if (selectedId === id) selectedId = null;
+    }
+  }
+  refreshCounts();
+  applyFilters();
+  if (follow) track();
+  const age = data.updated ? Math.max(0, Math.round((Date.now() - new Date(data.updated).getTime()) / 1000)) : null;
+  const late = age != null && age > 45;
+  $("status").textContent = late
+    ? `Date întârziate · ${states.size} vehicule · ${age}s`
+    : `Live · ${states.size} vehicule · ${new Date().toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+function frame(now) {
+  for (const s of states.values()) {
+    const p = Math.min(1, (now - s.t0) / TWEEN_MS);
+    if (p < 1 || s.cur[0] !== s.to[0]) {
+      s.cur = [s.from[0] + (s.to[0] - s.from[0]) * p, s.from[1] + (s.to[1] - s.from[1]) * p];
+      s.marker.setLngLat(s.cur);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function lineVehicles(name) {
+  return [...states.values()].filter((s) => s.line === name);
+}
+function termini(long) {
+  if (!long) return "";
+  const parts = long.split(/\s+-\s+/);
+  return parts.length >= 2 ? parts.join("  ·  ") : long;
+}
+function ageText(ts) {
+  if (!ts) return "";
+  const s = Math.max(0, Math.round(Date.now() / 1000 - ts));
+  if (s < 5) return "semnal acum";
+  if (s < 90) return `semnal acum ${s}s`;
+  return `semnal acum ${Math.round(s / 60)} min`;
+}
+function vehicleLine(s) {
+  if (!s) return "";
+  const bits = [];
+  if (s.label && s.label !== s.line) bits.push("nr. " + s.label);
+  if (s.plate) bits.push(s.plate);
+  if (s.speedKmh != null) bits.push(s.speedKmh + " km/h");
+  const where = s.stop && STATUS_RO[s.status] ? `${STATUS_RO[s.status]} ${s.stop}` : (s.stop ? s.stop : "");
+  const dest = s.headsign ? `spre ${s.headsign}` : "";
+  return [bits.join(" · "), dest, where, ageText(s.ts)].filter(Boolean).join(" · ");
+}
+
+function applyFilters() {
+  let count = 0, focused = null;
+  for (const s of states.values()) {
+    paintMarker(s);
+    if (s.line === selectedLine && isVisible(s)) count++;
+    if (s.id === selectedId) focused = s;
+  }
+  const card = $("card");
+  if (!selectedLine) {
+    card.style.display = "none";
+    follow = false;
+    $("follow").setAttribute("aria-pressed", "false");
+    $("follow").textContent = "Urmărește";
+    updateHex();
+    if ($("sheet").style.display === "flex") renderSheet();
+    return;
+  }
+  const sample = focused || lineVehicles(selectedLine)[0];
+  const type = sample?.type || typeOfLine(selectedLine);
+  const t = TYPES[type] || TYPES.other;
+  const badge = $("cardBadge");
+  badge.textContent = selectedLine;
+  badge.style.background = t.color;
+  badge.style.color = type === "metro" ? "#1a1404" : "#fff";
+  const long = sample?.long || longOf(selectedLine);
+  const title = type === "night" ? `Nocturna ${selectedLine}`
+    : type === "trolleybus" ? `Troleibuz ${selectedLine}`
+    : type === "tram" ? `Tramvai ${selectedLine}`
+    : type === "metro" ? `Metrou ${selectedLine}`
+    : type === "bus" ? `Autobuz ${selectedLine}`
+    : `Linia ${selectedLine}`;
+  $("cardTitle").textContent = title;
+  $("cardSub").textContent = long ? termini(long) : (count ? `${count} pe hartă` : "Fără traseu desenat");
+  const live = `${count} ${count === 1 ? "vehicul live" : "vehicule live"}`;
+  $("cardMeta").textContent = focused ? vehicleLine(focused) : (count ? `${live} · atinge un număr de pe hartă` : "Niciun vehicul live acum");
+  $("follow").disabled = !focused;
+  $("follow").style.opacity = focused ? "1" : ".4";
+  card.style.display = "flex";
+  updateHex();
+  if ($("sheet").style.display === "flex") renderSheet();
+}
+
+function typeOfLine(name) {
+  if (!allLines) return "bus";
+  for (const k of TYPE_ORDER) if ((allLines[k] || []).some((l) => l.name === name)) return k;
+  return "bus";
+}
+function longOf(name) {
+  if (!allLines) return "";
+  for (const k of TYPE_ORDER) {
+    const hit = (allLines[k] || []).find((l) => l.name === name);
+    if (hit) return hit.long || "";
+  }
+  return "";
+}
+
+async function showRoute(name, fit) {
+  let route = routeCache.get(name);
+  if (!route) {
+    try {
+      const res = await fetch("/api/route/" + encodeURIComponent(name));
+      route = res.ok ? await res.json() : { paths: [] };
+    } catch { route = { paths: [] }; }
+    routeCache.set(name, route);
+  }
+  if (selectedLine !== name || !mapReady) return;
+  const color = colorOf(route.type || typeOfLine(name));
+  const features = (route.paths || []).filter((p) => p.coordinates?.length > 1).map((p) => ({
+    type: "Feature", properties: { color }, geometry: { type: "LineString", coordinates: p.coordinates }
+  }));
+  map.getSource("route").setData({ type: "FeatureCollection", features });
+  if (!fit) return;
+  const b = new maplibregl.LngLatBounds();
+  let n = 0;
+  for (const f of features) for (const c of f.geometry.coordinates) { b.extend(c); n++; }
+  for (const s of lineVehicles(name)) { b.extend(s.cur); n++; }
+  if (n) map.fitBounds(b, { padding: { top: 150, bottom: 230, left: 48, right: 56 }, maxZoom: 15.2, duration: 1100 });
+}
+
+function clearRoute() {
+  if (mapReady) map.getSource("route").setData(emptyFc());
+}
+
+function chooseLine(name, fit = true) {
+  if (!name) return clearSelection();
+  selectedLine = name;
+  selectedId = null;
+  follow = false;
+  $("follow").setAttribute("aria-pressed", "false");
+  $("follow").textContent = "Urmărește";
+  applyFilters();
+  showRoute(name, fit);
+}
+function chooseVehicle(id) {
+  if (selectedId === id) {
+    clearSelection();
+    return;
+  }
+  const s = states.get(id);
+  if (!s) return;
+  const sameLine = selectedLine === s.line;
+  selectedLine = s.line;
+  selectedId = id;
+  follow = false;
+  $("follow").setAttribute("aria-pressed", "false");
+  $("follow").textContent = "Urmărește";
+  applyFilters();
+  if (!sameLine) showRoute(s.line, false);
+  const zoom = map.getZoom();
+  map.easeTo({ center: s.cur, zoom: zoom < 14 ? 15 : zoom, duration: 700 });
+}
+function clearSelection() {
+  selectedLine = null;
+  selectedId = null;
+  follow = false;
+  if (query) {
+    query = "";
+    $("q").value = "";
+  }
+  clearRoute();
+  applyFilters();
+}
+function track() {
+  const s = states.get(selectedId);
+  if (!s) { follow = false; return; }
+  map.easeTo({ center: s.cur, duration: 900, easing: (t) => t });
+}
+
+function catalog() {
+  const out = [];
+  if (allLines) {
+    for (const k of TYPE_ORDER) for (const l of allLines[k] || []) out.push({ name: l.name, long: l.long || "", type: k });
+  } else {
+    const seen = new Set();
+    for (const s of states.values()) if (!seen.has(s.line)) { seen.add(s.line); out.push({ name: s.line, long: s.long || "", type: s.type }); }
+  }
+  return out;
+}
+function rankName(name, q) {
+  const n = name.toLowerCase();
+  if (n === q) return 0;
+  if (n.startsWith(q)) return 1;
+  if (n.includes(q)) return 2;
+  return 9;
+}
+function matches(q) {
+  if (!q) return [];
+  return catalog()
+    .map((l) => ({ ...l, rank: rankName(l.name, q) }))
+    .filter((l) => l.rank < 9)
+    .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, undefined, { numeric: true }))
+    .slice(0, 8);
+}
+function renderSuggest() {
+  const box = $("suggest");
+  suggestItems = matches(query);
+  suggestIdx = suggestItems.length ? 0 : -1;
+  box.innerHTML = "";
+  if (!query || !suggestItems.length) { box.style.display = "none"; $("q").setAttribute("aria-expanded", "false"); return; }
+  suggestItems.forEach((l, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("role", "option");
+    b.setAttribute("aria-selected", i === suggestIdx);
+    const badge = document.createElement("b");
+    badge.textContent = l.name;
+    badge.style.background = colorOf(l.type);
+    badge.style.color = l.type === "metro" ? "#1a1404" : "#fff";
+    const sub = document.createElement("span");
+    sub.textContent = termini(l.long) || TYPES[l.type].label;
+    b.append(badge, sub);
+    b.addEventListener("mousedown", (ev) => { ev.preventDefault(); pickSuggest(i); });
+    box.appendChild(b);
+  });
+  box.style.display = "flex";
+  $("q").setAttribute("aria-expanded", "true");
+}
+function pickSuggest(i) {
+  const l = suggestItems[i];
+  if (!l) return;
+  $("q").value = "";
+  query = "";
+  $("suggest").style.display = "none";
+  $("q").setAttribute("aria-expanded", "false");
+  closeSheet();
+  chooseLine(l.name, true);
+}
+function refreshCounts() {
+  for (const k of TYPE_ORDER) {
+    const el = document.querySelector(`[data-type="${k}"] em`);
+    if (!el) continue;
+    let n = 0;
+    for (const s of states.values()) if (s.type === k) n++;
+    el.textContent = String(n);
+  }
+}
+
+async function poll() {
+  try {
+    const d = await (await fetch("/api/vehicles")).json();
+    if (d.error && !d.vehicles.length) throw new Error(d.error);
+    ingest(d);
+  } catch (e) { $("status").textContent = "Nu pot lua datele live: " + e.message; }
+}
+poll();
+setInterval(poll, POLL_MS);
+loadLines();
+
+for (const k of ["tram", "trolleybus", "bus", "night"]) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "chip g";
+  b.dataset.type = k;
+  b.setAttribute("aria-pressed", "true");
+  b.innerHTML = `<i style="background:${TYPES[k].color}"></i>${TYPES[k].label} <em>0</em>`;
+  b.addEventListener("click", () => { typeOn[k] = !typeOn[k]; b.setAttribute("aria-pressed", String(typeOn[k])); applyFilters(); });
+  $("chips").appendChild(b);
+}
+$("q").addEventListener("input", (e) => {
+  query = e.target.value.trim().toLowerCase();
+  applyFilters();
+  renderSuggest();
+});
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    if (!suggestItems.length) return;
+    e.preventDefault();
+    suggestIdx = (suggestIdx + (e.key === "ArrowDown" ? 1 : -1) + suggestItems.length) % suggestItems.length;
+    [...$("suggest").children].forEach((el, i) => el.setAttribute("aria-selected", i === suggestIdx));
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (suggestIdx >= 0) pickSuggest(suggestIdx);
+  } else if (e.key === "Escape") {
+    if ($("suggest").style.display === "flex") { $("suggest").style.display = "none"; return; }
+    clearSelection();
+    $("q").blur();
+  }
+});
+$("q").addEventListener("focus", renderSuggest);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
+  if (e.key === "Escape") { $("suggest").style.display = "none"; if (selectedLine) clearSelection(); }
+});
+$("clear").addEventListener("click", clearSelection);
+$("fit").addEventListener("click", () => { if (selectedLine) showRoute(selectedLine, true); });
+$("follow").addEventListener("click", () => {
+  if (!selectedId) return;
+  follow = !follow;
+  $("follow").setAttribute("aria-pressed", String(follow));
+  $("follow").textContent = follow ? "Oprește" : "Urmărește";
+  if (follow) track();
+});
+$("b3d").addEventListener("click", (e) => {
+  pitch3d = !pitch3d;
+  e.currentTarget.setAttribute("aria-pressed", String(pitch3d));
+  map.easeTo({ pitch: pitch3d ? 48 : 0, duration: 800 });
+});
+map.on("dragstart", () => {
+  if (!follow) return;
+  follow = false;
+  $("follow").setAttribute("aria-pressed", "false");
+  $("follow").textContent = "Urmărește";
+});
+map.on("click", () => {
+  if ($("suggest").style.display === "flex") $("suggest").style.display = "none";
+  $("q").blur();
+  if ($("sheet").style.display === "flex") closeSheet();
+  if (selectedLine || selectedId) {
+    clearSelection();
+  }
+});
+
+async function loadLines() {
+  try { allLines = (await (await fetch("/api/lines")).json()).lines || {}; }
+  catch { allLines = {}; }
+}
+async function openSheet() {
+  if (!allLines) await loadLines();
+  renderSheet();
+  $("sheet").style.display = "flex";
+}
+function renderSheet() {
+  const live = new Map();
+  for (const s of states.values()) live.set(s.line, (live.get(s.line) || 0) + 1);
+  $("tabs").innerHTML = "";
+  const present = TYPE_ORDER.filter((k) => (allLines?.[k] || []).length);
+  if (!present.includes(tab)) tab = present[0] || "tram";
+  for (const k of present) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(k === tab));
+    b.textContent = TYPES[k].label;
+    if (k === tab) b.style.background = TYPES[k].color;
+    if (k === tab && k === "metro") b.style.color = "#1a1404";
+    b.addEventListener("click", () => { tab = k; renderSheet(); });
+    $("tabs").appendChild(b);
+  }
+  $("list").innerHTML = "";
+  const rows = (allLines?.[tab] || []).filter((l) => !query || l.name.toLowerCase().includes(query) || (l.long || "").toLowerCase().includes(query));
+  for (const l of rows) {
+    const n = live.get(l.name) || 0;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ln" + (n ? "" : " off") + (l.name === selectedLine ? " active" : "");
+    const badge = document.createElement("b");
+    badge.textContent = l.name;
+    badge.style.background = TYPES[tab].color;
+    badge.style.color = tab === "metro" ? "#1a1404" : "#fff";
+    const sub = document.createElement("span");
+    sub.textContent = termini(l.long) || "Linie";
+    const count = document.createElement("em");
+    count.textContent = n ? String(n) : "–";
+    b.append(badge, sub, count);
+    b.addEventListener("click", () => { closeSheet(); chooseLine(l.name, true); });
+    $("list").appendChild(b);
+  }
+  if (!rows.length) {
+    const empty = document.createElement("div");
+    empty.style.cssText = "padding:10px 6px;color:var(--muted);font-size:13px";
+    empty.textContent = "Nicio linie pentru căutarea asta.";
+    $("list").appendChild(empty);
+  }
+  $("sheetNote").textContent = tab === "metro"
+    ? "Metroul nu publică poziții live în feed-ul TPBI."
+    : "Numărul din dreapta e câte vehicule sunt pe hartă acum.";
+}
+function closeSheet() {
+  $("sheet").style.display = "none";
+  $("bLines").setAttribute("aria-pressed", "false");
+  $("bMap").setAttribute("aria-pressed", "true");
+}
+$("bLines").addEventListener("click", () => {
+  if ($("sheet").style.display === "flex") return closeSheet();
+  $("bLines").setAttribute("aria-pressed", "true");
+  $("bMap").setAttribute("aria-pressed", "false");
+  openSheet();
+});
+$("bMap").addEventListener("click", closeSheet);
+</script>
+</body>
+</html>

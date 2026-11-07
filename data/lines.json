@@ -1,0 +1,1026 @@
+{
+  "updated": "2026-11-07T06:51:15.248Z",
+  "lines": {
+    "tram": [
+      {
+        "id": "68",
+        "name": "1",
+        "long": "Romprim - Bd. Banu Manta"
+      },
+      {
+        "id": "1013",
+        "name": "4",
+        "long": "Sura Mare - Zetarilor"
+      },
+      {
+        "id": "814",
+        "name": "5",
+        "long": "Aeroport Baneasa - Pantelimon"
+      },
+      {
+        "id": "69",
+        "name": "7",
+        "long": "C.F.R. Progresul - Piata Unirii"
+      },
+      {
+        "id": "67",
+        "name": "10",
+        "long": "Romprim - Bd. Banu Manta"
+      },
+      {
+        "id": "54",
+        "name": "11",
+        "long": "Zetarilor - Cartier Giulesti"
+      },
+      {
+        "id": "55",
+        "name": "21",
+        "long": "Piata Sf. Gheorghe - Pasaj Colentina"
+      },
+      {
+        "id": "63",
+        "name": "23",
+        "long": "Zetarilor - Faur"
+      },
+      {
+        "id": "65",
+        "name": "25",
+        "long": "C.F.R. Progresul - Depoul Militari"
+      },
+      {
+        "id": "66",
+        "name": "27",
+        "long": "Faur - Piata Unirii"
+      },
+      {
+        "id": "70",
+        "name": "32",
+        "long": "Depoul Alexandria - Piata Unirii"
+      },
+      {
+        "id": "57",
+        "name": "41",
+        "long": "Piata Presei - Ghencea"
+      },
+      {
+        "id": "61",
+        "name": "47",
+        "long": "Ghencea - Piata Unirii"
+      },
+      {
+        "id": "915",
+        "name": "53",
+        "long": "Mezes - Depoul Bucurestii Noi"
+      }
+    ],
+    "bus": [
+      {
+        "id": "887",
+        "name": "100",
+        "long": "Piata Unirii 2 - Aeroport Henri Coanda"
+      },
+      {
+        "id": "824",
+        "name": "101",
+        "long": "Faur - Bucur Obor"
+      },
+      {
+        "id": "150",
+        "name": "102",
+        "long": "Complex Pantelimon - C.F.R. Progresul"
+      },
+      {
+        "id": "148",
+        "name": "103",
+        "long": "Pantelimon - Isovolta"
+      },
+      {
+        "id": "146",
+        "name": "104",
+        "long": "Complex Pantelimon - Piata Operei"
+      },
+      {
+        "id": "144",
+        "name": "105",
+        "long": "Valea Oltului - Soseaua Nicolae Titulescu"
+      },
+      {
+        "id": "143",
+        "name": "106",
+        "long": "C.E.T. Vest Militari - Cartier Rosu"
+      },
+      {
+        "id": "183",
+        "name": "112",
+        "long": "Pasajul Pipera - Complex Colosseum"
+      },
+      {
+        "id": "180",
+        "name": "116",
+        "long": "C.F.R. Progresul - Piata Sf. Vineri"
+      },
+      {
+        "id": "181",
+        "name": "117",
+        "long": "Cartier Confort Urban - Piata Sf. Vineri"
+      },
+      {
+        "id": "825",
+        "name": "122",
+        "long": "Pasaj Domnesti - Piata 21 Decembrie 1989"
+      },
+      {
+        "id": "202",
+        "name": "123",
+        "long": "C.E.T. Sud Vitan - Gara Basarab"
+      },
+      {
+        "id": "191",
+        "name": "125",
+        "long": "Vulcan Berceni - Peco Silflor Move"
+      },
+      {
+        "id": "214",
+        "name": "135",
+        "long": "Pasajul Pipera - C.E.T. Sud Vitan"
+      },
+      {
+        "id": "245",
+        "name": "137",
+        "long": "Carrefour Militari - Piata 21 Decembrie 1989"
+      },
+      {
+        "id": "217",
+        "name": "138",
+        "long": "Complex Militari - Dedeman Ghencea"
+      },
+      {
+        "id": "218",
+        "name": "139",
+        "long": "Zetarilor - Piata Leul"
+      },
+      {
+        "id": "233",
+        "name": "141",
+        "long": "Zetarilor - Vulcan Berceni"
+      },
+      {
+        "id": "228",
+        "name": "143",
+        "long": "Arena Nationala - Bucur Obor"
+      },
+      {
+        "id": "124",
+        "name": "162",
+        "long": "Giulesti Sarbi - Gara Basarab"
+      },
+      {
+        "id": "126",
+        "name": "163",
+        "long": "Giulesti Sarbi - Piata Operei"
+      },
+      {
+        "id": "826",
+        "name": "168",
+        "long": "Valea Ialomitei - Piata Romana"
+      },
+      {
+        "id": "133",
+        "name": "178",
+        "long": "Complex Apusului - Sala Palatului"
+      },
+      {
+        "id": "827",
+        "name": "182",
+        "long": "Dragonul Rosu - Gara de Nord"
+      },
+      {
+        "id": "175",
+        "name": "185",
+        "long": "Ghencea - Cimitirul Ghencea 3"
+      },
+      {
+        "id": "828",
+        "name": "196",
+        "long": "Aeroport Baneasa - Autogara Filaret"
+      },
+      {
+        "id": "732",
+        "name": "203",
+        "long": "Cartier Greenfield - Piata Victoriei"
+      },
+      {
+        "id": "121",
+        "name": "205",
+        "long": "M Straulesti - Piata Unirii 2"
+      },
+      {
+        "id": "829",
+        "name": "216",
+        "long": "Zetarilor - Piata Sudului"
+      },
+      {
+        "id": "830",
+        "name": "220",
+        "long": "Vulcan Berceni - Piata Rahova"
+      },
+      {
+        "id": "158",
+        "name": "221",
+        "long": "Dedeman Ghencea - C.E.T. Vest Militari"
+      },
+      {
+        "id": "159",
+        "name": "222",
+        "long": "Pasaj Domnesti - Parcul Drumul Taberei"
+      },
+      {
+        "id": "160",
+        "name": "223",
+        "long": "Univ. Crestina Dimitrie Cantemir - Pasarela"
+      },
+      {
+        "id": "831",
+        "name": "226",
+        "long": "Depoul Alexandria - Piata Romana"
+      },
+      {
+        "id": "165",
+        "name": "227",
+        "long": "Depoul Alexandria - Cartier Confort Urban"
+      },
+      {
+        "id": "1037",
+        "name": "228",
+        "long": "Depoul Alexandria - Cartier Confort Urban"
+      },
+      {
+        "id": "210",
+        "name": "232",
+        "long": "Arcade Berceni - Valea Ialomitei"
+      },
+      {
+        "id": "620",
+        "name": "241",
+        "long": "Biserica Sfintii Brancoveni - Cartier Aparatorii Patriei"
+      },
+      {
+        "id": "186",
+        "name": "243",
+        "long": "Emil Racovita - Bd. Lacul Tei"
+      },
+      {
+        "id": "189",
+        "name": "246",
+        "long": "M Nicolae Teclu - Pantelimon"
+      },
+      {
+        "id": "232",
+        "name": "253",
+        "long": "Spitalul Fundeni - Parcul Teilor"
+      },
+      {
+        "id": "116",
+        "name": "282",
+        "long": "Gara Basarab - Soseaua Fundeni"
+      },
+      {
+        "id": "1015",
+        "name": "290",
+        "long": "Complex Baneasa - Soseaua Colentina"
+      },
+      {
+        "id": "201",
+        "name": "301",
+        "long": "Pasaj CFR Tunari - Piata Romana"
+      },
+      {
+        "id": "980",
+        "name": "301B",
+        "long": "Tunari - Piata Romana"
+      },
+      {
+        "id": "203",
+        "name": "304",
+        "long": "M Straulesti - Piata Presei"
+      },
+      {
+        "id": "136",
+        "name": "311",
+        "long": "Faur - Sala Palatului"
+      },
+      {
+        "id": "134",
+        "name": "312",
+        "long": "Bd. Alexandru Obregia - Piata Unirii 1"
+      },
+      {
+        "id": "803",
+        "name": "322",
+        "long": "Bd. Preciziei - Parcul Drumul Taberei"
+      },
+      {
+        "id": "832",
+        "name": "323",
+        "long": "Zetarilor - Piata Unirii 1"
+      },
+      {
+        "id": "113",
+        "name": "330",
+        "long": "Parcul Teilor - Dristorului"
+      },
+      {
+        "id": "234",
+        "name": "331",
+        "long": "Cartier Damaroaia - Piata Romana"
+      },
+      {
+        "id": "235",
+        "name": "331B",
+        "long": "Petrom City - Piata Romana"
+      },
+      {
+        "id": "117",
+        "name": "335",
+        "long": "Faur - Complex Baneasa"
+      },
+      {
+        "id": "464",
+        "name": "343",
+        "long": "Fundeni - Cartier Henri Coanda"
+      },
+      {
+        "id": "833",
+        "name": "368",
+        "long": "Valea Oltului - Piata Romana"
+      },
+      {
+        "id": "184",
+        "name": "381",
+        "long": "Piata Resita - Clabucet"
+      },
+      {
+        "id": "112",
+        "name": "382",
+        "long": "Baicului - Escalei"
+      },
+      {
+        "id": "404",
+        "name": "385",
+        "long": "Valea Oltului - Piata Sf. Vineri"
+      },
+      {
+        "id": "PV1_403",
+        "name": "403",
+        "long": ""
+      },
+      {
+        "id": "PV1_405",
+        "name": "405",
+        "long": ""
+      },
+      {
+        "id": "PV1_407",
+        "name": "407",
+        "long": ""
+      },
+      {
+        "id": "PV1_408",
+        "name": "408",
+        "long": ""
+      },
+      {
+        "id": "PV1_409",
+        "name": "409",
+        "long": ""
+      },
+      {
+        "id": "PV1_409B",
+        "name": "409B",
+        "long": ""
+      },
+      {
+        "id": "PV1_411",
+        "name": "411",
+        "long": ""
+      },
+      {
+        "id": "PV1_412",
+        "name": "412",
+        "long": ""
+      },
+      {
+        "id": "PV1_413",
+        "name": "413",
+        "long": ""
+      },
+      {
+        "id": "PV1_416",
+        "name": "416",
+        "long": ""
+      },
+      {
+        "id": "PV1_417",
+        "name": "417",
+        "long": ""
+      },
+      {
+        "id": "PV1_418",
+        "name": "418",
+        "long": ""
+      },
+      {
+        "id": "PV1_419",
+        "name": "419",
+        "long": ""
+      },
+      {
+        "id": "PV1_420",
+        "name": "420",
+        "long": ""
+      },
+      {
+        "id": "844",
+        "name": "421",
+        "long": "Cornetu - Depoul Alexandria"
+      },
+      {
+        "id": "835",
+        "name": "422",
+        "long": "Darvari - Ghencea"
+      },
+      {
+        "id": "836",
+        "name": "423",
+        "long": "Teghes - Ghencea"
+      },
+      {
+        "id": "845",
+        "name": "424",
+        "long": "Clinceni - Depoul Alexandria"
+      },
+      {
+        "id": "837",
+        "name": "425",
+        "long": "Ordoreanu - Ghencea"
+      },
+      {
+        "id": "843",
+        "name": "425B",
+        "long": "Clinceni - Ghencea"
+      },
+      {
+        "id": "PV1_426",
+        "name": "426",
+        "long": ""
+      },
+      {
+        "id": "PV1_427",
+        "name": "427",
+        "long": ""
+      },
+      {
+        "id": "PV1_428",
+        "name": "428",
+        "long": ""
+      },
+      {
+        "id": "PV2_429",
+        "name": "429",
+        "long": ""
+      },
+      {
+        "id": "848",
+        "name": "431",
+        "long": "Darvari - Valea Cascadelor"
+      },
+      {
+        "id": "849",
+        "name": "432",
+        "long": "Zurbaua - Valea Cascadelor"
+      },
+      {
+        "id": "850",
+        "name": "433",
+        "long": "Dragomiresti Deal - Valea Cascadelor"
+      },
+      {
+        "id": "851",
+        "name": "434",
+        "long": "Chiajna-Stelelor - M Lujerului"
+      },
+      {
+        "id": "PV2_435",
+        "name": "435",
+        "long": ""
+      },
+      {
+        "id": "PV2_436",
+        "name": "436",
+        "long": ""
+      },
+      {
+        "id": "PV1_438",
+        "name": "438",
+        "long": ""
+      },
+      {
+        "id": "PV1_439",
+        "name": "439",
+        "long": ""
+      },
+      {
+        "id": "PV1_440",
+        "name": "440",
+        "long": ""
+      },
+      {
+        "id": "855",
+        "name": "441",
+        "long": "Ostratu - Piata Presei"
+      },
+      {
+        "id": "874",
+        "name": "441B",
+        "long": "Tamasi - Piata Presei"
+      },
+      {
+        "id": "856",
+        "name": "442",
+        "long": "Therme Bucuresti - Piata Presei"
+      },
+      {
+        "id": "857",
+        "name": "443",
+        "long": "Peris - Piata Presei"
+      },
+      {
+        "id": "902",
+        "name": "443B",
+        "long": "Peris Sat - Piata Presei"
+      },
+      {
+        "id": "858",
+        "name": "444",
+        "long": "Piscu - Piata Presei"
+      },
+      {
+        "id": "859",
+        "name": "446",
+        "long": "Gruiu-Lipia - Piata Presei"
+      },
+      {
+        "id": "PV1_447",
+        "name": "447",
+        "long": ""
+      },
+      {
+        "id": "PV1_447B",
+        "name": "447B",
+        "long": ""
+      },
+      {
+        "id": "365",
+        "name": "448",
+        "long": "Moara Vlasiei - Piata Presei"
+      },
+      {
+        "id": "PV1_449",
+        "name": "449",
+        "long": ""
+      },
+      {
+        "id": "PV1_450",
+        "name": "450",
+        "long": ""
+      },
+      {
+        "id": "PV1_451",
+        "name": "451",
+        "long": ""
+      },
+      {
+        "id": "PV1_452",
+        "name": "452",
+        "long": ""
+      },
+      {
+        "id": "PV1_454",
+        "name": "454",
+        "long": ""
+      },
+      {
+        "id": "PV1_455",
+        "name": "455",
+        "long": ""
+      },
+      {
+        "id": "PV1_457",
+        "name": "457",
+        "long": ""
+      },
+      {
+        "id": "PV1_458",
+        "name": "458",
+        "long": ""
+      },
+      {
+        "id": "PV1_459",
+        "name": "459",
+        "long": ""
+      },
+      {
+        "id": "PV9_462",
+        "name": "462",
+        "long": ""
+      },
+      {
+        "id": "PV1_464",
+        "name": "464",
+        "long": ""
+      },
+      {
+        "id": "PV1_465",
+        "name": "465",
+        "long": ""
+      },
+      {
+        "id": "PV9_466",
+        "name": "466",
+        "long": ""
+      },
+      {
+        "id": "PV1_467",
+        "name": "467",
+        "long": ""
+      },
+      {
+        "id": "PV1_468",
+        "name": "468",
+        "long": ""
+      },
+      {
+        "id": "PV1_468B",
+        "name": "468B",
+        "long": ""
+      },
+      {
+        "id": "PV2_470",
+        "name": "470",
+        "long": ""
+      },
+      {
+        "id": "PV1_472",
+        "name": "472",
+        "long": ""
+      },
+      {
+        "id": "PV1_473",
+        "name": "473",
+        "long": ""
+      },
+      {
+        "id": "PV1_475",
+        "name": "475",
+        "long": ""
+      },
+      {
+        "id": "PV2_476",
+        "name": "476",
+        "long": ""
+      },
+      {
+        "id": "395",
+        "name": "477",
+        "long": "Sitaru - Piata Presei"
+      },
+      {
+        "id": "888",
+        "name": "478",
+        "long": "Bd. Preciziei - Chiajna-Militari"
+      },
+      {
+        "id": "PV1_479",
+        "name": "479",
+        "long": ""
+      },
+      {
+        "id": "PV1_480",
+        "name": "480",
+        "long": ""
+      },
+      {
+        "id": "PV2_481",
+        "name": "481",
+        "long": ""
+      },
+      {
+        "id": "PV2_482",
+        "name": "482",
+        "long": ""
+      },
+      {
+        "id": "901",
+        "name": "483",
+        "long": "Chiajna-Stelelor - M Lujerului"
+      },
+      {
+        "id": "820",
+        "name": "484",
+        "long": "Bragadiru Diamantului - Ghencea"
+      },
+      {
+        "id": "884",
+        "name": "484B",
+        "long": "Bragadiru Diamantului - Depoul Alexandria"
+      },
+      {
+        "id": "821",
+        "name": "485",
+        "long": "Bragadiru Diamantului - Parcul Drumul Taberei"
+      },
+      {
+        "id": "804",
+        "name": "487",
+        "long": "ELI-NP Magurele - Bd. G-ral Paul Teodorescu"
+      },
+      {
+        "id": "PV1_488",
+        "name": "488",
+        "long": ""
+      },
+      {
+        "id": "119",
+        "name": "605",
+        "long": "Piata Sf. Vineri - Soseaua Stefan cel Mare"
+      },
+      {
+        "id": "661",
+        "name": "619",
+        "long": "Sura Mare - Faur"
+      },
+      {
+        "id": "942",
+        "name": "627",
+        "long": "M Nicolae Teclu - Dristorului"
+      },
+      {
+        "id": "889",
+        "name": "640",
+        "long": "Isovolta - Piata Sf. Vineri"
+      },
+      {
+        "id": "952",
+        "name": "642",
+        "long": "Piata Presei - Vasile Parvan"
+      },
+      {
+        "id": "621",
+        "name": "655",
+        "long": "Piata Sf. Vineri - Piata Iancului"
+      },
+      {
+        "id": "430",
+        "name": "City Tour",
+        "long": "Piata Presei - Piata Unirii 2"
+      }
+    ],
+    "trolleybus": [
+      {
+        "id": "84",
+        "name": "61",
+        "long": "Complex Apusului - Piata Rosetti"
+      },
+      {
+        "id": "81",
+        "name": "62",
+        "long": "Colegiul Tehnic Iuliu Maniu - Gara de Nord"
+      },
+      {
+        "id": "910",
+        "name": "63",
+        "long": "Master - Pod Izvor"
+      },
+      {
+        "id": "72",
+        "name": "66",
+        "long": "Spitalul Fundeni - Vasile Parvan"
+      },
+      {
+        "id": "75",
+        "name": "69",
+        "long": "Valea Argesului - Bd. Basarabia"
+      },
+      {
+        "id": "924",
+        "name": "72",
+        "long": "Turnu Magurele - Costache Stamate"
+      },
+      {
+        "id": "925",
+        "name": "73",
+        "long": "Piata de Gros - Piata Sf. Vineri"
+      },
+      {
+        "id": "85",
+        "name": "74",
+        "long": "Arcade Berceni - Piata Unirii"
+      },
+      {
+        "id": "86",
+        "name": "76",
+        "long": "Piata Resita - Costache Stamate"
+      },
+      {
+        "id": "73",
+        "name": "79",
+        "long": "Clabucet - Calea Mosilor"
+      },
+      {
+        "id": "87",
+        "name": "85",
+        "long": "Arena Nationala - Gara de Nord"
+      },
+      {
+        "id": "83",
+        "name": "86",
+        "long": "Cartier Pajura - Baicului"
+      },
+      {
+        "id": "78",
+        "name": "90",
+        "long": "Arena Nationala - M Petrache Poenaru"
+      },
+      {
+        "id": "76",
+        "name": "93",
+        "long": "Cartier Constantin Brancusi - Piata Presei"
+      },
+      {
+        "id": "916",
+        "name": "95",
+        "long": "M Straulesti - Cartier Pajura"
+      },
+      {
+        "id": "74",
+        "name": "96",
+        "long": "Depoul Alexandria - Gara de Nord"
+      },
+      {
+        "id": "247",
+        "name": "97",
+        "long": "Clabucet - Pasaj Mihai Bravu"
+      }
+    ],
+    "night": [
+      {
+        "id": "812",
+        "name": "N1",
+        "long": "Romprim - Bd. Banu Manta"
+      },
+      {
+        "id": "735",
+        "name": "N10",
+        "long": "Romprim - Bd. Banu Manta"
+      },
+      {
+        "id": "208",
+        "name": "N101",
+        "long": "Piata Unirii 2 - Valea Oltului"
+      },
+      {
+        "id": "209",
+        "name": "N102",
+        "long": "Piata Unirii 2 - Pantelimon"
+      },
+      {
+        "id": "196",
+        "name": "N103",
+        "long": "Piata Unirii 2 - Institutul Oncologic"
+      },
+      {
+        "id": "197",
+        "name": "N104",
+        "long": "Piata Unirii 4 - Parcul Teilor"
+      },
+      {
+        "id": "192",
+        "name": "N105",
+        "long": "Piata Unirii 4 - Vulcan Berceni"
+      },
+      {
+        "id": "194",
+        "name": "N106",
+        "long": "Piata Unirii 2 - Turnu Magurele"
+      },
+      {
+        "id": "204",
+        "name": "N107",
+        "long": "Piata Unirii 4 - C.F.R. Progresul"
+      },
+      {
+        "id": "207",
+        "name": "N108",
+        "long": "Piata Unirii 2 - Pasaj Colentina"
+      },
+      {
+        "id": "199",
+        "name": "N109",
+        "long": "Piata Unirii 2 - Isovolta"
+      },
+      {
+        "id": "141",
+        "name": "N110",
+        "long": "Piata Unirii 2 - Cartier Giulesti"
+      },
+      {
+        "id": "140",
+        "name": "N111",
+        "long": "Piata Unirii 4 - M Nicolae Teclu"
+      },
+      {
+        "id": "139",
+        "name": "N112",
+        "long": "Piata Unirii 4 - Piata Resita"
+      },
+      {
+        "id": "137",
+        "name": "N113",
+        "long": "Piata Unirii 2 - Mezes"
+      },
+      {
+        "id": "155",
+        "name": "N114",
+        "long": "Piata Unirii 2 - Autobaza Alexandria"
+      },
+      {
+        "id": "154",
+        "name": "N115",
+        "long": "Piata Unirii 2 - Colegiul Tehnic Iuliu Maniu"
+      },
+      {
+        "id": "152",
+        "name": "N116",
+        "long": "Piata Unirii 2 - Valea Ialomitei"
+      },
+      {
+        "id": "149",
+        "name": "N117",
+        "long": "Piata Unirii 2 - M Straulesti"
+      },
+      {
+        "id": "147",
+        "name": "N118",
+        "long": "Piata Unirii 2 - Zetarilor"
+      },
+      {
+        "id": "145",
+        "name": "N119",
+        "long": "Piata Unirii 2 - Complex Baneasa"
+      },
+      {
+        "id": "174",
+        "name": "N120",
+        "long": "Piata Unirii 2 - Soseaua Fundeni"
+      },
+      {
+        "id": "169",
+        "name": "N121",
+        "long": "Piata Unirii 2 - Valea Argesului"
+      },
+      {
+        "id": "167",
+        "name": "N122",
+        "long": "Piata Unirii 4 - Faur"
+      }
+    ],
+    "metro": [
+      {
+        "id": "968",
+        "name": "M1",
+        "long": "Pantelimon/Republica - Dristor 2"
+      },
+      {
+        "id": "969",
+        "name": "M2",
+        "long": "Pipera - Berceni - Tudor Arghezi"
+      },
+      {
+        "id": "970",
+        "name": "M3",
+        "long": "Preciziei - Anghel Saligny"
+      },
+      {
+        "id": "971",
+        "name": "M4",
+        "long": "Gara de Nord 2 - Straulesti"
+      },
+      {
+        "id": "999",
+        "name": "M5",
+        "long": "Eroilor 2 - Valea Ialomiței/Râul Doamnei"
+      }
+    ],
+    "other": []
+  }
+}
