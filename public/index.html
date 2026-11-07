@@ -806,13 +806,24 @@ let selectedLine = null, selectedId = null, follow = false, query = "";
 let pitch3d = true, hexReady = false, mapReady = false, suggestItems = [];
 let markerJustClicked = false;
 
-function resetToOverview() {
+function resetToCityOverview() {
   map.easeTo({
     center: [26.1025, 44.4268],
     zoom: 13.4,
     pitch: pitch3d ? 48 : 0,
     bearing: -16,
     duration: 750
+  });
+}
+
+function zoomOutLocalArea(pos) {
+  const currentZoom = map.getZoom();
+  const targetZoom = currentZoom > 14 ? 13.6 : currentZoom;
+  const center = pos || map.getCenter();
+  map.easeTo({
+    center: center,
+    zoom: targetZoom,
+    duration: 600
   });
 }
 
@@ -1214,8 +1225,10 @@ function chooseLine(name, fit = true) {
 
 function chooseVehicle(id) {
   if (selectedId === id) {
+    const s = states.get(id);
+    const lastPos = s?.cur || map.getCenter();
     clearSelection();
-    resetToOverview();
+    zoomOutLocalArea(lastPos);
     return;
   }
   const s = states.get(id);
@@ -1409,17 +1422,21 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
   if (e.key === "Escape") {
     $("suggest").style.display = "none";
-    if (selectedLine) {
+    if (selectedLine || selectedId) {
+      const s = selectedId ? states.get(selectedId) : null;
+      const lastPos = s?.cur || map.getCenter();
       clearSelection();
-      resetToOverview();
+      zoomOutLocalArea(lastPos);
     }
   }
 });
 
 // ─── CARD ACTIONS ───
 $("clear").addEventListener("click", () => {
+  const s = selectedId ? states.get(selectedId) : null;
+  const lastPos = s?.cur || map.getCenter();
   clearSelection();
-  resetToOverview();
+  zoomOutLocalArea(lastPos);
 });
 $("fit").addEventListener("click", () => { if (selectedLine) showRoute(selectedLine, true); });
 $("follow").addEventListener("click", toggleFollow);
@@ -1444,10 +1461,12 @@ map.on("click", () => {
   $("q").blur();
   if ($("sheet").style.display === "flex") closeSheet();
 
-  // Tap anywhere on the map to deselect and return to overview
+  // Tap anywhere on the map: deselect, zoom out, remain in the tracked vehicle's zone
   if (selectedLine || selectedId) {
+    const s = selectedId ? states.get(selectedId) : null;
+    const lastPos = s?.cur || map.getCenter();
     clearSelection();
-    resetToOverview();
+    zoomOutLocalArea(lastPos);
   }
 });
 
@@ -1542,7 +1561,7 @@ $("bMap").addEventListener("click", () => {
   if (selectedLine || selectedId) {
     clearSelection();
   }
-  resetToOverview();
+  resetToCityOverview();
   $("bMap").setAttribute("aria-pressed", "true");
   $("bLines").setAttribute("aria-pressed", "false");
 });
