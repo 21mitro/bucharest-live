@@ -2,11 +2,12 @@
 <html lang="ro">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="București Live">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0c0e12">
 <meta name="color-scheme" content="dark">
 <title>București Live</title>
@@ -23,6 +24,8 @@
 <style>
 :root{
   --bg:#0c0e12;
+  --surface:#151824;
+  --surface-border:rgba(255,255,255,.15);
   --ink:#f2f4f8;
   --muted:rgba(242,244,248,.65);
   --line:rgba(255,255,255,.14);
@@ -36,14 +39,210 @@
   --ms:1;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);font-family:Outfit,system-ui,-apple-system,sans-serif;color:var(--ink);overflow:hidden}
-#map{position:absolute;inset:0;z-index:0}
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  min-height:100%;
+  min-height:-webkit-fill-available;
+  min-height:100dvh;
+  overflow:hidden;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:var(--bg);
+  font-family:Outfit,system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* ─── FULL-SCREEN MAP (Flows under notch, status bar & home indicator) ─── */
+#map{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  min-height:-webkit-fill-available;
+  z-index:0;
+}
+.maplibregl-canvas-container, .maplibregl-canvas {
+  width:100%!important;
+  height:100%!important;
+}
+
 button,input{font:inherit;color:inherit}
-button{cursor:pointer;background:none;border:0;padding:0}
+button{cursor:pointer;background:none;border:0;padding:0;touch-action:manipulation}
 button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-offset:2px}
 
-/* ─── LIQUID GLASS DESIGN SYSTEM (Rich, semi-opaque, not overly transparent) ─── */
-.liquid-glass, .g {
+/* ─── CRISP TOP BAR (NO BLUR OVERLAY ON SEARCH) ─── */
+#top {
+  position:fixed;
+  z-index:5;
+  isolation:isolate;
+  left:max(12px, env(safe-area-inset-left));
+  right:calc(max(10px, env(safe-area-inset-right)) + 48px);
+  top:max(10px, env(safe-area-inset-top));
+  max-width:480px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  pointer-events:none;
+}
+#top > * { pointer-events:auto }
+@media (min-width: 640px) {
+  #top {
+    left:50%;
+    transform:translateX(-50%);
+    width:min(480px, calc(100% - 24px));
+    right:auto;
+  }
+}
+#finder { position:relative; z-index:5; width:100% }
+
+/* Search bar is crisp, solid, with NO blur or glare */
+#search {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:48px;
+  padding:0 14px;
+  border-radius:16px;
+  background:var(--surface);
+  border:1px solid var(--surface-border);
+  box-shadow:0 6px 20px rgba(0,0,0,.5);
+}
+#search svg { flex:none; opacity:.8; color:var(--ink) }
+#search input {
+  flex:1;
+  min-width:0;
+  background:none;
+  border:0;
+  font-size:16px; /* 16px is required to prevent iOS Safari auto-zoom */
+  font-weight:500;
+  color:#fff;
+  -webkit-appearance:none;
+  border-radius:0;
+}
+#search input::placeholder { color:var(--muted); opacity:1 }
+#searchClear {
+  display:none;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:var(--muted);
+  flex-shrink:0;
+}
+#searchClear:hover { background:rgba(255,255,255,.2); color:#fff }
+
+#suggest {
+  position:absolute;
+  left:0; right:0;
+  top:calc(100% + 6px);
+  display:none;
+  flex-direction:column;
+  padding:6px;
+  border-radius:16px;
+  background:#141724;
+  border:1px solid var(--surface-border);
+  box-shadow:0 12px 32px rgba(0,0,0,.65);
+  max-height:260px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+#suggest button {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:8px 10px;
+  text-align:left;
+  transition:background .15s;
+}
+#suggest button:hover, #suggest button[aria-selected=true] { background:rgba(255,255,255,.08) }
+#suggest b {
+  min-width:46px;
+  height:26px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+#suggest span {
+  font-size:13px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+#chips {
+  position:relative;
+  z-index:1;
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.chip {
+  flex:none;
+  height:34px;
+  border-radius:17px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:13px;
+  font-weight:600;
+  background:var(--surface);
+  border:1px solid var(--surface-border);
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+  transition:opacity .2s, transform .15s;
+}
+.chip:active { transform:scale(0.97) }
+.chip i { width:8px; height:8px; border-radius:50% }
+.chip em { font-style:normal; color:var(--muted); font-weight:600; margin-left:2px }
+.chip[aria-pressed=false] { opacity:.42 }
+
+#status {
+  align-self:flex-start;
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+  padding:4px 11px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:var(--surface);
+  border:1px solid var(--surface-border);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.live-dot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#10b981;
+  box-shadow:0 0 8px #10b981;
+  animation:pulseDot 1.6s infinite;
+}
+
+/* ─── LIQUID GLASS BOTTOM CONTAINER & COMPONENTS ─── */
+.liquid-glass {
   background: linear-gradient(145deg, rgba(20, 25, 36, 0.91) 0%, rgba(13, 16, 24, 0.94) 100%);
   backdrop-filter: blur(28px) saturate(190%) contrast(106%);
   -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(106%);
@@ -55,7 +254,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
     inset 0 -1px 1px 0 rgba(0, 0, 0, 0.5);
   position: relative;
 }
-.liquid-glass::before, .g::before {
+.liquid-glass::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; height: 42%;
@@ -64,553 +263,439 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   border-radius: inherit;
 }
 
-/* ─── TOP HEADER / SEARCH ─── */
-#top {
-  position: absolute;
-  z-index: 5;
-  isolation: isolate;
-  left: 14px;
-  right: 68px;
-  top: max(14px, env(safe-area-inset-top));
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
-}
-#top > * { pointer-events: auto }
-@media (min-width: 680px) {
-  #top {
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(480px, calc(100% - 28px));
-    right: auto;
-  }
-}
-#finder { position: relative; z-index: 5; width: 100% }
-#search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 48px;
-  padding: 0 16px;
-  border-radius: 16px;
-}
-#search svg { flex: none; opacity: .75 }
-#search input {
-  flex: 1;
-  min-width: 0;
-  background: none;
-  border: 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: #fff;
-}
-#search input::placeholder { color: var(--muted) }
-#suggest {
-  position: absolute;
-  left: 0; right: 0;
-  top: calc(100% + 6px);
-  display: none;
-  flex-direction: column;
-  padding: 6px;
-  border-radius: 16px;
-  max-height: 280px;
-  overflow: auto;
-}
-#suggest button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 8px 10px;
-  text-align: left;
-  transition: background .15s;
-}
-#suggest button:hover, #suggest button[aria-selected=true] { background: rgba(255,255,255,.08) }
-#suggest b {
-  min-width: 46px;
-  height: 26px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 2px 6px rgba(0,0,0,.35);
-}
-#suggest span {
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#chips {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.chip {
-  flex: none;
-  height: 34px;
-  border-radius: 17px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid var(--line);
-  transition: opacity .2s, transform .15s;
-}
-.chip:active { transform: scale(0.97) }
-.chip i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor }
-.chip em { font-style: normal; color: var(--muted); font-weight: 600; margin-left: 2px }
-.chip[aria-pressed=false] { opacity: .42 }
-#status {
-  align-self: flex-start;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 4px 11px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulseDot 1.6s infinite;
-}
-
-/* ─── BOTTOM CONTAINER (Zero overlap, coordinated flex stack) ─── */
 #bottom {
-  position: absolute;
-  z-index: 10;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(480px, calc(100% - 24px));
-  bottom: max(14px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: none;
+  position:fixed;
+  z-index:10;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(480px, calc(100% - 24px));
+  bottom:max(12px, env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  pointer-events:none;
 }
-#bottom > * { pointer-events: auto }
+#bottom > * { pointer-events:auto }
 
 /* ─── SHEET PANEL (Vehicles & Lines) ─── */
 #sheet {
-  max-height: min(58vh, 480px);
-  display: none;
-  flex-direction: column;
-  border-radius: 20px;
-  padding: 12px 14px;
-  animation: sheetPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height:min(58vh, 480px);
+  display:none;
+  flex-direction:column;
+  border-radius:20px;
+  padding:12px 14px;
+  animation:sheetPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes sheetPop {
-  from { opacity: 0; transform: translateY(10px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity:0; transform:translateY(10px) scale(0.985); }
+  to { opacity:1; transform:translateY(0) scale(1); }
 }
 .sheet-top {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 6px;
-  flex-shrink: 0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:6px;
+  flex-shrink:0;
 }
 .sheet-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2px;
 }
 .sheet-title {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 #sheetClose {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  transition: all .15s;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  transition:all .15s;
 }
-#sheetClose:hover {
-  background: rgba(255,255,255,.14);
-  color: #fff;
-}
+#sheetClose:hover { background:rgba(255,255,255,.14); color:#fff }
 #tabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
 }
 #tabs button {
-  flex: none;
-  border-radius: 12px;
-  height: 32px;
-  padding: 0 12px;
-  background: rgba(255,255,255,.06);
-  border: 1px solid transparent;
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--muted);
-  transition: all .16s;
+  flex:none;
+  border-radius:12px;
+  height:32px;
+  padding:0 12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid transparent;
+  font-weight:600;
+  font-size:13px;
+  color:var(--muted);
+  transition:all .16s;
 }
-#tabs button:hover {
-  background: rgba(255,255,255,.1);
-  color: #fff;
-}
+#tabs button:hover { background:rgba(255,255,255,.1); color:#fff }
 #tabs button[aria-selected=true] {
-  color: #fff;
-  border-color: rgba(255,255,255,.2);
-  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  color:#fff;
+  border-color:rgba(255,255,255,.2);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
 }
 #list {
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-right: 2px;
-  flex: 1;
-  min-height: 120px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding-right:2px;
+  flex:1;
+  min-height:120px;
+  -webkit-overflow-scrolling:touch;
 }
 .ln {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  height: 46px;
-  border-radius: 12px;
-  background: transparent;
-  padding: 0 8px;
-  text-align: left;
-  border: 1px solid transparent;
-  transition: background .15s, border-color .15s;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  height:46px;
+  border-radius:12px;
+  background:transparent;
+  padding:0 8px;
+  text-align:left;
+  border:1px solid transparent;
+  transition:background .15s, border-color .15s;
 }
 .ln:hover, .ln.active {
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.1);
+  background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.1);
 }
 .ln b {
-  min-width: 52px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -.03em;
-  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+  min-width:52px;
+  height:28px;
+  padding:0 8px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:-.03em;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 .ln span {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex:1;
+  min-width:0;
+  font-size:13px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .ln em {
-  font-style: normal;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  min-width: 18px;
-  text-align: right;
+  font-style:normal;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+  min-width:18px;
+  text-align:right;
 }
-.ln.off { opacity: .4 }
+.ln.off { opacity:.4 }
 #sheetNote {
-  font-size: 11px;
-  color: var(--muted);
-  padding: 6px 4px 2px;
-  flex-shrink: 0;
+  font-size:11px;
+  color:var(--muted);
+  padding:6px 4px 2px;
+  flex-shrink:0;
 }
 
-/* ─── ACTIVE VEHICLE / ROUTE CARD ─── */
+/* ─── MOBILE-OPTIMIZED 2-ROW CARD (Zero Cramping) ─── */
 #card {
-  display: none;
-  border-radius: 18px;
-  padding: 10px 12px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  animation: cardIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display:none;
+  border-radius:18px;
+  padding:12px 14px;
+  flex-direction:column;
+  gap:10px;
+  animation:cardIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity:0; transform:translateY(6px); }
+  to { opacity:1; transform:translateY(0); }
 }
-.card-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
+.card-header-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
 }
 #cardBadge {
-  min-width: 48px;
-  height: 42px;
-  padding: 0 8px;
-  border-radius: 12px;
-  color: #fff;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -.04em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 3px 10px rgba(0,0,0,.4);
-  flex-shrink: 0;
+  min-width:48px;
+  height:42px;
+  padding:0 8px;
+  border-radius:12px;
+  color:#fff;
+  font-weight:700;
+  font-size:18px;
+  letter-spacing:-.04em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-variant-numeric:tabular-nums;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);
+  flex-shrink:0;
 }
 .card-details {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 #cardTitle {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #fff;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#fff;
 }
 #cardSub {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
+  font-size:12px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:1px;
 }
 #cardMeta {
-  font-size: 11px;
-  color: rgba(242,244,248,.84);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
-}
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-.card-actions button {
-  height: 34px;
-  padding: 0 10px;
-  border-radius: 11px;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.07);
-  font-weight: 600;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #fff;
-  transition: all .16s;
-  user-select: none;
-}
-.card-actions button:hover {
-  background: rgba(255,255,255,.14);
-  border-color: rgba(255,255,255,.24);
-}
-.card-actions button:active {
-  transform: scale(0.96);
-}
-#follow[aria-pressed="true"] {
-  background: #2563eb;
-  border-color: #60a5fa;
-  color: #fff;
-  box-shadow: 0 0 14px rgba(37,99,235,.6);
-}
-#followDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  display: inline-block;
-}
-#follow[aria-pressed="true"] #followDot {
-  animation: pulseDot 1s infinite;
-}
-@keyframes pulseDot {
-  0% { transform: scale(0.8); opacity: 0.6; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.8); opacity: 0.6; }
+  font-size:11px;
+  color:rgba(242,244,248,.84);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:1px;
 }
 #clear {
-  width: 32px;
-  height: 34px;
-  padding: 0;
-  justify-content: center;
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  flex-shrink:0;
+  transition:all .15s;
+}
+#clear:hover { background:rgba(255,255,255,.14); color:#fff }
+
+.card-actions-row {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.card-actions-row button {
+  height:38px;
+  padding:0 14px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  font-weight:600;
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  color:#fff;
+  transition:all .16s;
+  user-select:none;
+}
+#follow {
+  flex:1.3;
+}
+#fit {
+  flex:1;
+}
+.card-actions-row button:hover {
+  background:rgba(255,255,255,.14);
+  border-color:rgba(255,255,255,.24);
+}
+.card-actions-row button:active { transform:scale(0.97) }
+
+#follow[aria-pressed="true"] {
+  background:#2563eb;
+  border-color:#60a5fa;
+  color:#fff;
+  box-shadow:0 0 14px rgba(37,99,235,.6);
+}
+#followDot {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#fff;
+  display:inline-block;
+}
+#follow[aria-pressed="true"] #followDot {
+  animation:pulseDot 1s infinite;
+}
+@keyframes pulseDot {
+  0% { transform:scale(0.8); opacity:0.6; }
+  50% { transform:scale(1.3); opacity:1; }
+  100% { transform:scale(0.8); opacity:0.6; }
 }
 
-/* ─── BOTTOM NAV BAR (Liquid Glass Bar) ─── */
+/* ─── LIQUID GLASS BOTTOM NAV BAR ─── */
 #nav {
-  height: 56px;
-  border-radius: 20px;
-  padding: 5px;
-  display: flex;
-  gap: 6px;
-  align-items: stretch;
+  height:56px;
+  border-radius:20px;
+  padding:5px;
+  display:flex;
+  gap:6px;
+  align-items:stretch;
 }
 #nav button {
-  flex: 1;
-  border: 1px solid transparent;
-  border-radius: 15px;
-  background: transparent;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  user-select: none;
-  -webkit-user-select: none;
+  flex:1;
+  border:1px solid transparent;
+  border-radius:15px;
+  background:transparent;
+  font-weight:600;
+  font-size:14px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  transition:all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  user-select:none;
+  -webkit-user-select:none;
 }
 #nav button:hover {
-  color: #fff;
-  background: rgba(255,255,255,.06);
+  color:#fff;
+  background:rgba(255,255,255,.06);
 }
-#nav button:active {
-  transform: scale(0.97);
-}
+#nav button:active { transform:scale(0.97) }
 #nav button[aria-pressed="true"], #nav button.active {
-  color: #ffffff;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  color:#ffffff;
+  background:linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border:1px solid rgba(255, 255, 255, 0.24);
   box-shadow: 
     inset 0 1px 1px rgba(255, 255, 255, 0.35),
     0 4px 14px rgba(0, 0, 0, 0.4);
-  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  text-shadow:0 1px 2px rgba(0,0,0,.4);
 }
 .nav-count {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  margin-left: 2px;
-  font-variant-numeric: tabular-nums;
+  font-size:11px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:999px;
+  background:rgba(255, 255, 255, 0.12);
+  color:#fff;
+  margin-left:2px;
+  font-variant-numeric:tabular-nums;
 }
 
-/* ─── MAP MARKERS & LIBRE STYLES ─── */
-.v { pointer-events: auto; cursor: pointer; user-select: none; -webkit-user-select: none }
+/* ─── MAP CONTROLS & SAFE-AREA POSITIONS ─── */
+.maplibregl-ctrl-top-right {
+  top:max(10px, env(safe-area-inset-top))!important;
+  right:max(10px, env(safe-area-inset-right))!important;
+}
+.maplibregl-ctrl-group {
+  background:rgba(18,22,32,.92)!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:14px!important;
+  overflow:hidden;
+  box-shadow:0 8px 26px rgba(0,0,0,.5)!important;
+}
+.maplibregl-ctrl-group button { filter:invert(1); opacity:.88 }
+.maplibregl-ctrl-group button + button { border-top:1px solid rgba(255,255,255,.12)!important }
+.maplibregl-ctrl-attrib {
+  background:rgba(12,14,20,.82)!important;
+  color:rgba(255,255,255,.62)!important;
+  font-size:11px;
+  border-radius:8px!important;
+  margin:0 6px 6px 0!important;
+}
+.maplibregl-ctrl-attrib a { color:#fff!important }
+.maplibregl-ctrl-bottom-right {
+  bottom:calc(72px + env(safe-area-inset-bottom))!important;
+  right:max(8px, env(safe-area-inset-right))!important;
+}
+
+/* ─── VEHICLE MARKERS ─── */
+.v { pointer-events:auto; cursor:pointer; user-select:none; -webkit-user-select:none }
 .v > span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  border-radius: 7px;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: -.04em;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  line-height: 1;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.75), 0 4px 12px rgba(0,0,0,.45);
-  transform: scale(var(--ms));
-  transform-origin: center;
-  transition: transform .2s, opacity .2s, box-shadow .2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:22px;
+  padding:0 6px;
+  border-radius:7px;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;
+  color:#fff;
+  line-height:1;
+  box-shadow:0 0 0 1px rgba(0,0,0,.75), 0 4px 12px rgba(0,0,0,.45);
+  transform:scale(var(--ms));
+  transform-origin:center;
+  transition:transform .2s, opacity .2s, box-shadow .2s;
 }
 .v .tick {
-  display: none;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  margin: -3px 0 0 -4px;
-  background: #fff;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.75));
-  transform: rotate(var(--b, 0deg)) translateY(-17px);
+  display:none;
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:7px;
+  height:7px;
+  margin:-3px 0 0 -4px;
+  background:#fff;
+  clip-path:polygon(50% 0, 100% 100%, 0 100%);
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.75));
+  transform:rotate(var(--b, 0deg)) translateY(-17px);
 }
-body.near .v.on .tick { display: block }
-.v.dim > span { opacity: .2; transform: scale(calc(var(--ms) * .9)); box-shadow: none }
+body.near .v.on .tick { display:block }
+.v.dim > span { opacity:.2; transform:scale(calc(var(--ms) * .9)); box-shadow:none }
 .v.focus > span {
-  transform: scale(calc(var(--ms) * 1.14));
-  box-shadow: 0 0 0 2px #fff, 0 6px 18px rgba(0,0,0,.6);
+  transform:scale(calc(var(--ms) * 1.14));
+  box-shadow:0 0 0 2px #fff, 0 6px 18px rgba(0,0,0,.6);
 }
 
-.maplibregl-ctrl-group {
-  background: rgba(18,22,32,.92)!important;
-  border: 1px solid rgba(255,255,255,.14)!important;
-  border-radius: 14px!important;
-  overflow: hidden;
-  box-shadow: 0 8px 26px rgba(0,0,0,.5)!important;
-}
-.maplibregl-ctrl-group button { filter: invert(1); opacity: .88 }
-.maplibregl-ctrl-group button + button { border-top: 1px solid rgba(255,255,255,.12)!important }
-.maplibregl-ctrl-attrib {
-  background: rgba(12,14,20,.82)!important;
-  color: rgba(255,255,255,.62)!important;
-  font-size: 11px;
-  border-radius: 8px!important;
-  margin: 0 6px 6px 0!important;
-}
-.maplibregl-ctrl-attrib a { color: #fff!important }
-.maplibregl-ctrl-bottom-right { bottom: 74px !important }
-@media (prefers-reduced-motion:reduce){ .v>span { transition: none } }
+@media (prefers-reduced-motion:reduce){ .v>span { transition:none } }
 </style>
 </head>
 <body>
 <div id="map"></div>
 
-<!-- Top header bar & search -->
+<!-- Top Header Bar (Crisp Search, No Blur) -->
 <div id="top">
   <div id="finder">
-    <label id="search" class="liquid-glass">
+    <label id="search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-      <input id="q" type="search" placeholder="Caută linia, ex. 41" autocomplete="off" aria-label="Caută o linie" role="combobox" aria-expanded="false" aria-controls="suggest">
+      <input id="q" type="search" placeholder="Caută linia, ex. 41" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Caută o linie" role="combobox" aria-expanded="false" aria-controls="suggest">
+      <button id="searchClear" type="button" aria-label="Șterge căutarea">✕</button>
     </label>
-    <div id="suggest" class="liquid-glass" role="listbox"></div>
+    <div id="suggest" role="listbox"></div>
   </div>
   <div id="chips"></div>
-  <div id="status" class="liquid-glass" role="status">
+  <div id="status" role="status">
     <span class="live-dot"></span>
     <span id="statusText">Se conectează…</span>
   </div>
 </div>
 
-<!-- Coordinated Bottom Container (Zero overlap) -->
+<!-- Coordinated Bottom Container (Zero Overlap, Liquid Glass) -->
 <div id="bottom">
   <!-- Vehicle & Lines Sheet Dialog -->
   <div id="sheet" class="liquid-glass" role="dialog" aria-label="Vehicule și Linii">
@@ -635,27 +720,27 @@ body.near .v.on .tick { display: block }
     <div id="sheetNote"></div>
   </div>
 
-  <!-- Active Vehicle / Route Card -->
+  <!-- Mobile-Optimized Active Vehicle / Route Card -->
   <div id="card" class="liquid-glass">
-    <div class="card-left">
+    <div class="card-header-row">
       <div id="cardBadge">41</div>
       <div class="card-details">
         <div id="cardTitle">Linia</div>
         <div id="cardSub">Traseu</div>
         <div id="cardMeta">Vehicule live</div>
       </div>
-    </div>
-    <div class="card-actions">
-      <button id="fit" type="button" title="Vezi traseul complet">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-        <span>Traseu</span>
+      <button id="clear" type="button" title="Închide selecția" aria-label="Închide">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
+    </div>
+    <div class="card-actions-row">
       <button id="follow" type="button" aria-pressed="false" title="Urmărește camera cu vehiculul">
         <span id="followDot"></span>
         <span id="followText">Urmărește</span>
       </button>
-      <button id="clear" type="button" title="Închide selecția">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button id="fit" type="button" title="Vezi traseul complet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        <span>Traseu</span>
       </button>
     </div>
   </div>
@@ -694,7 +779,6 @@ body.near .v.on .tick { display: block }
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script>
 const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
-// Upstream TPBI updates every 5s; poll every 5s with smooth 5.8s tweening
 const POLL_MS = 5000, TWEEN_MS = 5800, HEX_R = 280, MISS_LIMIT = 4;
 const TYPES = {
   tram:       { label: "Tramvaie",   color: "#ff4d6d" },
@@ -730,11 +814,23 @@ map.addControl(new maplibregl.GeolocateControl({
   trackUserLocation: true,
   showUserHeading: true
 }), "top-right");
+
 map.on("error", (e) => {
   if (!states.size) {
     const st = $("statusText");
     if (st) st.textContent = "Eroare hartă: " + (e.error?.message || "necunoscută");
   }
+});
+
+// Ensure MapLibre fills the screen across all iOS dynamic bars & orientation changes
+function fitMapCanvas() {
+  if (map) map.resize();
+}
+window.addEventListener("resize", fitMapCanvas);
+window.addEventListener("orientationchange", () => setTimeout(fitMapCanvas, 250));
+window.addEventListener("pageshow", fitMapCanvas);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) fitMapCanvas();
 });
 
 const LAT0 = 44.43, LNG0 = 26.10, MX = 111320 * Math.cos(LAT0 * Math.PI / 180), MY = 110574, S3 = Math.sqrt(3);
@@ -797,6 +893,10 @@ function tuneDark() {
 
 map.on("load", () => {
   tuneDark();
+  fitMapCanvas();
+  setTimeout(fitMapCanvas, 200);
+  setTimeout(fitMapCanvas, 600);
+
   const firstSymbol = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
   map.addSource("hex", { type: "geojson", data: emptyFc() });
   map.addLayer({ id: "hex-fill", type: "fill", source: "hex", paint: {
@@ -921,7 +1021,7 @@ function ingest(data) {
   }
 }
 
-// ─── SMOOTH RAF LOOP & SYNCHRONOUS CAMERA TRACKING ───
+// ─── RAF LOOP & CAMERA TRACKING ───
 function frame(now) {
   for (const s of states.values()) {
     const p = Math.min(1, (now - s.t0) / TWEEN_MS);
@@ -934,7 +1034,7 @@ function frame(now) {
     }
   }
 
-  // Camera glides at the EXACT same time as the vehicle
+  // Camera moves synchronously with the vehicle
   if (follow && selectedId) {
     const s = states.get(selectedId);
     if (s && s.cur) {
@@ -992,7 +1092,7 @@ function applyFilters() {
     return;
   }
 
-  // If the lines sheet is currently open, keep the card hidden so they don't overlap
+  // Hide card when sheet is open to prevent overlap
   if (sheetOpen) {
     card.style.display = "none";
     return;
@@ -1013,7 +1113,7 @@ function applyFilters() {
     : type === "bus" ? `Autobuz ${selectedLine}`
     : `Linia ${selectedLine}`;
   $("cardTitle").textContent = title;
-  $("cardSub").textContent = long ? termini(long) : (count ? `${count} pe hartă` : "Fără traseu desenat");
+  $("cardSub").textContent = long ? termini(long) : (count ? `${count} pe traseu` : "Fără traseu desenat");
   const live = `${count} ${count === 1 ? "vehicul live" : "vehicule live"}`;
   $("cardMeta").textContent = focused ? vehicleLine(focused) : (count ? `${live} · atinge un vehicul pe hartă` : "Niciun vehicul live acum");
   
@@ -1061,7 +1161,7 @@ async function showRoute(name, fit) {
   let n = 0;
   for (const f of features) for (const c of f.geometry.coordinates) { b.extend(c); n++; }
   for (const s of lineVehicles(name)) { b.extend(s.cur); n++; }
-  if (n) map.fitBounds(b, { padding: { top: 140, bottom: 200, left: 40, right: 40 }, maxZoom: 15.2, duration: 900 });
+  if (n) map.fitBounds(b, { padding: { top: 120, bottom: 200, left: 30, right: 30 }, maxZoom: 15.2, duration: 800 });
 }
 
 function clearRoute() {
@@ -1101,6 +1201,7 @@ function clearSelection() {
   if (query) {
     query = "";
     $("q").value = "";
+    $("searchClear").style.display = "none";
   }
   clearRoute();
   applyFilters();
@@ -1189,6 +1290,7 @@ function pickSuggest(i) {
   const l = suggestItems[i];
   if (!l) return;
   $("q").value = "";
+  $("searchClear").style.display = "none";
   query = "";
   $("suggest").style.display = "none";
   $("q").setAttribute("aria-expanded", "false");
@@ -1205,7 +1307,7 @@ function refreshCounts() {
   }
 }
 
-// ─── LIVE DATA POLLING (Fast 5s intervals) ───
+// ─── LIVE DATA POLLING ───
 async function poll() {
   try {
     const d = await (await fetch("/api/vehicles")).json();
@@ -1224,7 +1326,7 @@ loadLines();
 for (const k of ["tram", "trolleybus", "bus", "night"]) {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = "chip liquid-glass";
+  b.className = "chip";
   b.dataset.type = k;
   b.setAttribute("aria-pressed", "true");
   b.innerHTML = `<i style="background:${TYPES[k].color}"></i>${TYPES[k].label} <em>0</em>`;
@@ -1239,8 +1341,17 @@ for (const k of ["tram", "trolleybus", "bus", "night"]) {
 // ─── SEARCH INPUT EVENTS ───
 $("q").addEventListener("input", (e) => {
   query = e.target.value.trim().toLowerCase();
+  $("searchClear").style.display = query ? "flex" : "none";
   applyFilters();
   renderSuggest();
+});
+$("searchClear").addEventListener("click", () => {
+  $("q").value = "";
+  $("searchClear").style.display = "none";
+  query = "";
+  $("suggest").style.display = "none";
+  applyFilters();
+  $("q").focus();
 });
 $("q").addEventListener("keydown", (e) => {
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -1276,9 +1387,8 @@ $("b3d").addEventListener("click", () => {
   map.easeTo({ pitch: pitch3d ? 48 : 0, duration: 650 });
 });
 
-// ─── MAP USER GESTURES ───
+// ─── MAP GESTURES ───
 map.on("dragstart", () => {
-  // If user manually drags/pans map, gracefully disengage camera follow
   if (follow) {
     stopFollow();
   }
@@ -1296,7 +1406,6 @@ async function loadLines() {
 }
 async function openSheet() {
   if (!allLines) await loadLines();
-  // Hide active card while sheet is open so they never overlap
   $("card").style.display = "none";
   renderSheet();
   $("sheet").style.display = "flex";
@@ -1307,7 +1416,6 @@ function closeSheet() {
   $("sheet").style.display = "none";
   $("bLines").setAttribute("aria-pressed", "false");
   $("bMap").setAttribute("aria-pressed", "true");
-  // If a line is selected, restore its card
   if (selectedLine) {
     applyFilters();
   }
@@ -1382,7 +1490,6 @@ $("bMap").addEventListener("click", () => {
   if (selectedLine || selectedId) {
     clearSelection();
   } else {
-    // Return smoothly to default Bucharest overview
     map.easeTo({
       center: [26.1025, 44.4268],
       zoom: 13.4,
