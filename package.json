@@ -3,12 +3,22 @@
   "version": "1.0.0",
   "description": "Live buses, trams and trolleybuses in Bucharest",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "adm-zip": "^0.5.16",
-    "csv-parse": "^5.5.6",
+    "adm-zip": "^0.6.1",
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
     "express": "^4.19.2",
-    "gtfs-realtime-bindings": "^1.1.1"
+    "express-rate-limit": "^8.7.3",
+    "gtfs-realtime-bindings": "^1.1.1",
+    "helmet": "^8.3.0"
+  },
+  "allowScripts": {
+    "protobufjs@7.6.6": true
   }
 }

@@ -4,6 +4,9 @@ const path = require("path");
 const AdmZip = require("adm-zip");
 const { parse } = require("csv-parse/sync");
 const GtfsRt = require("gtfs-realtime-bindings");
+const helmet = require("helmet");
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 
 // Official TPBI open data (see mo-bi.ro -> Source Code and Open Data for terms of use)
 const STATIC_URL = "https://gtfs.tpbi.ro/regional/BUCHAREST-REGION.zip";
@@ -272,7 +275,80 @@ async function pollVehicles() {
 }
 
 const app = express();
+
+// ─── SECURITY MIDDLEWARE ────────────────────────────────────────────
+
+// 1. Trust the Render proxy so rate-limit sees real client IPs
+app.set("trust proxy", 1);
+
+// 2. Helmet – secure HTTP headers with CSP tailored to this app
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+          "https://unpkg.com",
+        ],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: [
+          "'self'",
+          "https://tiles.openfreemap.org",
+          "https://*.openfreemap.org",
+        ],
+        workerSrc: ["'self'", "blob:"],
+        childSrc: ["'self'", "blob:"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,   // maplibre needs cross-origin tile fetches
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  })
+);
+
+// 3. CORS – restrictive; only same-origin in production
+const ALLOWED_ORIGINS = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+  : [];    // empty = same-origin only (no extra origins allowed)
+
+app.use(
+  cors({
+    origin(origin, cb) {
+      // Allow same-origin requests (origin is undefined) and whitelisted origins
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      cb(new Error("Blocat de CORS"));
+    },
+    methods: ["GET"],
+    optionsSuccessStatus: 200,
+  })
+);
+
+// 4. Rate limiting – 120 req / min per IP for the API
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Prea multe cereri, reîncearcă mai târziu." },
+});
+app.use("/api/", apiLimiter);
+
+// 5. Payload size limit (even though the app has no POST routes today)
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: false, limit: "10kb" }));
+
+// ─── STATIC FILES ───────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "public")));
+
+// ─── API ROUTES ─────────────────────────────────────────────────────
 app.get("/api/vehicles", (req, res) => {
   res.json({ updated: lastUpdate, error: lastError, count: vehicles.length, vehicles });
 });
@@ -292,6 +368,13 @@ app.get("/api/route/:name", (req, res) => {
   });
 });
 
+// ─── GLOBAL ERROR HANDLER (never leak stack traces) ─────────────────
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled:", err.message);
+  res.status(err.status || 500).json({ error: "Eroare internă" });
+});
+
+// ─── STARTUP ────────────────────────────────────────────────────────
 (async () => {
   await loadStatic();
   await pollVehicles();
