@@ -423,39 +423,45 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   flex-shrink:0;
 }
 
-/* ─── MOBILE-OPTIMIZED 2-ROW CARD (Zero Cramping) ─── */
+/* ─── REDESIGNED VEHICLE CARD ─── */
 #card {
   display:none;
-  border-radius:18px;
-  padding:12px 14px;
+  border-radius:22px;
+  padding:16px;
   flex-direction:column;
-  gap:10px;
-  animation:cardIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap:0;
+  animation:cardIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height:calc(100dvh - 200px);
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 @keyframes cardIn {
-  from { opacity:0; transform:translateY(6px); }
+  from { opacity:0; transform:translateY(10px); }
   to { opacity:1; transform:translateY(0); }
 }
+
+/* Row 1: Badge + Title + Close */
 .card-header-row {
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
   width:100%;
+  margin-bottom:10px;
 }
 #cardBadge {
-  min-width:48px;
-  height:42px;
-  padding:0 8px;
-  border-radius:12px;
+  min-width:52px;
+  height:46px;
+  padding:0 10px;
+  border-radius:14px;
   color:#fff;
   font-weight:700;
-  font-size:18px;
+  font-size:20px;
   letter-spacing:-.04em;
   display:flex;
   align-items:center;
   justify-content:center;
   font-variant-numeric:tabular-nums;
-  box-shadow:0 3px 10px rgba(0,0,0,.4);
+  box-shadow:0 4px 14px rgba(0,0,0,.5);
   flex-shrink:0;
 }
 .card-details {
@@ -466,35 +472,30 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   justify-content:center;
 }
 #cardTitle {
-  font-size:14px;
+  font-size:15px;
   font-weight:700;
   letter-spacing:-.02em;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   color:#fff;
+  line-height:1.2;
 }
 #cardSub {
-  font-size:12px;
+  font-size:12.5px;
   color:var(--muted);
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  margin-top:1px;
+  margin-top:2px;
+  line-height:1.2;
 }
-#cardMeta {
-  font-size:11px;
-  color:rgba(242,244,248,.84);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  margin-top:1px;
-}
+#cardMeta { display:none }
 #clear {
-  width:30px;
-  height:30px;
+  width:32px;
+  height:32px;
   border-radius:50%;
-  border:1px solid var(--line);
+  border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.06);
   display:flex;
   align-items:center;
@@ -503,8 +504,127 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   flex-shrink:0;
   transition:all .15s;
 }
-#clear:hover { background:rgba(255,255,255,.14); color:#fff }
+#clear:hover { background:rgba(255,255,255,.16); color:#fff }
 
+/* Row 2: Vehicle details grid (only when focused) */
+.card-info-grid {
+  display:none;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:6px;
+  width:100%;
+  margin-bottom:10px;
+}
+.card-info-grid.visible { display:grid }
+.card-info-cell {
+  padding:7px 8px;
+  border-radius:10px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+.card-info-label {
+  font-size:9.5px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:rgba(242,244,248,.45);
+  line-height:1;
+}
+.card-info-value {
+  font-size:12.5px;
+  font-weight:700;
+  color:#fff;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+
+/* Row 3: Next stop highlight */
+.card-next-stop {
+  display:none;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background:rgba(76,141,255,.08);
+  border:1px solid rgba(76,141,255,.18);
+  margin-bottom:10px;
+  width:100%;
+}
+.card-next-stop.visible { display:flex }
+.card-ns-icon {
+  flex-shrink:0;
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  background:rgba(76,141,255,.15);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#4c8dff;
+}
+.card-ns-text {
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.card-ns-label {
+  font-size:10px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:rgba(242,244,248,.5);
+  line-height:1;
+}
+.card-ns-name {
+  font-size:13px;
+  font-weight:700;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.2;
+}
+.card-ns-eta {
+  flex-shrink:0;
+  font-size:13px;
+  font-weight:700;
+  color:#1fb97a;
+  white-space:nowrap;
+}
+.card-ns-eta.atStop {
+  color:#ffb703;
+}
+
+/* Row 4: Status bar (live count or signal age) */
+.card-status-bar {
+  font-size:11px;
+  color:var(--muted);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.card-status-bar .live-pulse {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#1fb97a;
+  display:inline-block;
+  animation:pulseDot 1.5s infinite;
+}
+
+/* Row 5: Action buttons */
 .card-actions-row {
   display:flex;
   align-items:center;
@@ -512,17 +632,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   width:100%;
 }
 .card-actions-row button {
-  height:38px;
-  padding:0 14px;
-  border-radius:12px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.08);
+  height:40px;
+  padding:0 16px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.07);
   font-weight:600;
   font-size:13px;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:7px;
+  gap:8px;
   color:#fff;
   transition:all .16s;
   user-select:none;
@@ -537,13 +657,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--bus);outline-of
   background:rgba(255,255,255,.14);
   border-color:rgba(255,255,255,.24);
 }
-.card-actions-row button:active { transform:scale(0.97) }
+.card-actions-row button:active { transform:scale(0.96) }
 
 #follow[aria-pressed="true"] {
   background:#2563eb;
   border-color:#60a5fa;
   color:#fff;
-  box-shadow:0 0 14px rgba(37,99,235,.6);
+  box-shadow:0 0 16px rgba(37,99,235,.55);
 }
 #followDot {
   width:7px;
@@ -680,6 +800,217 @@ body.near .v.on .tick { display:block }
 }
 
 @media (prefers-reduced-motion:reduce){ .v>span { transition:none } }
+
+/* ─── MAPLIBRE POPUP FOR TRANSIT STOPS & LIVE ETA ─── */
+.maplibregl-popup {
+  z-index: 10;
+  max-width: 320px !important;
+}
+.maplibregl-popup-content {
+  background: rgba(21, 24, 36, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255,255,255,0.06) !important;
+  color: var(--ink) !important;
+  font-family: inherit !important;
+}
+.maplibregl-popup-close-button {
+  color: var(--muted) !important;
+  font-size: 18px !important;
+  top: 10px !important;
+  right: 12px !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+.maplibregl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: rgba(21, 24, 36, 0.94) !important; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: rgba(21, 24, 36, 0.94) !important; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: rgba(21, 24, 36, 0.94) !important; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: rgba(21, 24, 36, 0.94) !important; }
+
+.pop-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-right: 22px;
+}
+.pop-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(76, 141, 255, 0.18);
+  color: var(--bus);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.pop-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.pop-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 70px;
+  overflow-y: auto;
+}
+.pop-line-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: transform 0.12s;
+}
+.pop-line-pill:hover {
+  transform: scale(1.08);
+}
+.pop-eta-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pop-eta-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.pop-arrivals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.pop-arrival-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  position: relative;
+  overflow: hidden;
+}
+.pop-arrival-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(2px);
+}
+/* Progress proximity bar */
+.pop-arr-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 12px 0 0 12px;
+  opacity: 0.12;
+  transition: width 0.4s ease;
+  pointer-events: none;
+}
+.pop-arr-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+  z-index: 1;
+}
+.pop-arr-dest {
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+.pop-arr-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.pop-arr-eta {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1fb97a;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+.pop-arr-eta.urgent {
+  color: #ffb703;
+  font-size: 14.5px;
+}
+.pop-arr-eta.atStop {
+  color: #ff6b81;
+  font-size: 13px;
+}
+.pop-arr-dist {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.pop-arr-empty {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 0;
+  line-height: 1.4;
+}
+.pop-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 8px 0;
+}
+.pop-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--bus);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
 </style>
 </head>
 <body>
@@ -727,19 +1058,57 @@ body.near .v.on .tick { display:block }
     <div id="sheetNote"></div>
   </div>
 
-  <!-- Mobile-Optimized Active Vehicle / Route Card -->
+  <!-- Redesigned Vehicle / Route Card -->
   <div id="card" class="liquid-glass">
     <div class="card-header-row">
       <div id="cardBadge">41</div>
       <div class="card-details">
         <div id="cardTitle">Linia</div>
         <div id="cardSub">Traseu</div>
-        <div id="cardMeta">Vehicule live</div>
+        <div id="cardMeta"></div>
       </div>
       <button id="clear" type="button" title="Închide selecția" aria-label="Închide">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+
+    <!-- Vehicle detail cells (visible only when a vehicle is focused) -->
+    <div id="cardInfoGrid" class="card-info-grid">
+      <div class="card-info-cell">
+        <span class="card-info-label">Nr. parc</span>
+        <span id="cardInfoLabel" class="card-info-value">–</span>
+      </div>
+      <div class="card-info-cell">
+        <span class="card-info-label">Înmatriculare</span>
+        <span id="cardInfoPlate" class="card-info-value">–</span>
+      </div>
+      <div class="card-info-cell">
+        <span class="card-info-label">Viteză</span>
+        <span id="cardInfoSpeed" class="card-info-value">–</span>
+      </div>
+    </div>
+
+    <!-- Next stop highlight (visible only when vehicle has ETA) -->
+    <div id="cardNextStop" class="card-next-stop">
+      <div class="card-ns-icon" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+      </div>
+      <div class="card-ns-text">
+        <span class="card-ns-label">Următoarea stație</span>
+        <span id="cardNsName" class="card-ns-name">–</span>
+      </div>
+      <span id="cardNsEta" class="card-ns-eta"></span>
+    </div>
+
+    <!-- Status / live count line -->
+    <div id="cardStatusBar" class="card-status-bar">
+      <span class="live-pulse"></span>
+      <span id="cardStatusText">–</span>
+    </div>
+
     <div class="card-actions-row">
       <button id="follow" type="button" aria-pressed="false" title="Urmărește camera cu vehiculul">
         <span id="followDot"></span>
@@ -805,6 +1174,7 @@ let allLines = null, tab = "tram", suggestIdx = -1;
 let selectedLine = null, selectedId = null, follow = false, query = "";
 let pitch3d = true, hexReady = false, mapReady = false, suggestItems = [];
 let markerJustClicked = false;
+let currentStopPopup = null;
 
 function resetToCityOverview() {
   map.easeTo({
@@ -932,6 +1302,151 @@ function tuneDark() {
   }
 }
 
+async function onStopClick(e) {
+  markerJustClicked = true;
+  setTimeout(() => { markerJustClicked = false; }, 350);
+
+  const feature = e.features && e.features[0];
+  if (!feature) return;
+
+  const props = feature.properties;
+  const coords = feature.geometry.coordinates.slice();
+  const stopId = props.id;
+  const stopName = props.name;
+  const linesStr = props.lines || "";
+  const linesList = linesStr ? linesStr.split(",").map((s) => s.trim()).filter(Boolean) : [];
+
+  if (currentStopPopup) currentStopPopup.remove();
+
+  const container = document.createElement("div");
+
+  const head = document.createElement("div");
+  head.className = "pop-head";
+  head.innerHTML = `
+    <div class="pop-icon" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+    </div>
+    <h3 class="pop-title">${stopName}</h3>
+  `;
+  container.appendChild(head);
+
+  if (linesList.length) {
+    const linesWrap = document.createElement("div");
+    linesWrap.className = "pop-lines";
+    for (const lName of linesList) {
+      const type = typeOfLine(lName);
+      const pill = document.createElement("span");
+      pill.className = "pop-line-pill";
+      pill.textContent = lName;
+      pill.style.background = colorOf(type);
+      pill.style.color = type === "metro" ? "#1a1404" : "#fff";
+      pill.title = `Filtrează linia ${lName}`;
+      pill.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        chooseLine(lName, true);
+      });
+      linesWrap.appendChild(pill);
+    }
+    container.appendChild(linesWrap);
+  }
+
+  const etaSec = document.createElement("div");
+  etaSec.className = "pop-eta-section";
+  etaSec.innerHTML = `
+    <div class="pop-eta-title">Sosiri în timp real</div>
+    <div class="pop-loading">
+      <span class="pop-spinner"></span>
+      <span>Se calculează timpii de sosire...</span>
+    </div>
+  `;
+  container.appendChild(etaSec);
+
+  currentStopPopup = new maplibregl.Popup({
+    closeButton: true,
+    closeOnClick: false,
+    maxWidth: "320px",
+    offset: 10
+  })
+    .setLngLat(coords)
+    .setDOMContent(container)
+    .addTo(map);
+
+  try {
+    const res = await fetch(`/api/eta?stopId=${encodeURIComponent(stopId)}`);
+    if (!res.ok) throw new Error("Eroare la preluarea sosirilor");
+    const data = await res.json();
+
+    const loadEl = etaSec.querySelector(".pop-loading");
+    if (loadEl) loadEl.remove();
+
+    if (!data.arrivals || !data.arrivals.length) {
+      const empty = document.createElement("div");
+      empty.className = "pop-arr-empty";
+      empty.textContent = "Niciun vehicul în tranzit spre această stație momentan.";
+      etaSec.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "pop-arrivals-list";
+
+    // Sort by ETA ascending (closest arrival first)
+    const sorted = data.arrivals.slice(0, 8).sort((a, b) => a.etaMinutes - b.etaMinutes);
+
+    for (const arr of sorted) {
+      const item = document.createElement("div");
+      item.className = "pop-arrival-item";
+      const isAtStop = arr.etaText === "În stație" || (arr.isDirectStop && arr.distMeters < 60);
+      const isUrgent = arr.etaMinutes <= 1 && !isAtStop;
+      const badgeColor = colorOf(arr.type || typeOfLine(arr.line));
+      const textColor = arr.type === "metro" ? "#1a1404" : "#fff";
+      const distStr = arr.distMeters < 1000 ? `${arr.distMeters} m` : `${(arr.distMeters / 1000).toFixed(1)} km`;
+
+      // Proximity progress: max 12km = 0%, 0m = 100%
+      const progressPct = Math.max(0, Math.min(100, Math.round((1 - arr.distMeters / 8000) * 100)));
+
+      // Short ETA text for the big display
+      let shortEta;
+      if (isAtStop) {
+        shortEta = "În stație";
+      } else if (arr.etaMinutes <= 1) {
+        shortEta = "~1 min";
+      } else {
+        shortEta = arr.etaMinutes + " min";
+      }
+
+      item.innerHTML = `
+        <div class="pop-arr-progress" style="width:${progressPct}%;background:${badgeColor}"></div>
+        <div class="pop-arr-left">
+          <span class="pop-line-pill" style="background:${badgeColor};color:${textColor}">${arr.line}</span>
+          <span class="pop-arr-dest" title="${arr.headsign ? 'spre ' + arr.headsign : ''}">${arr.headsign ? 'spre ' + arr.headsign : 'în curs'}</span>
+        </div>
+        <div class="pop-arr-right">
+          <span class="pop-arr-eta ${isAtStop ? 'atStop' : (isUrgent ? 'urgent' : '')}">${shortEta}</span>
+          <span class="pop-arr-dist">${distStr}</span>
+        </div>
+      `;
+
+      item.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (arr.vehicleId) {
+          chooseVehicle(arr.vehicleId);
+        }
+      });
+      list.appendChild(item);
+    }
+    etaSec.appendChild(list);
+  } catch (err) {
+    const loadEl = etaSec.querySelector(".pop-loading");
+    if (loadEl) {
+      loadEl.innerHTML = `<span style="color:#ff6b81;font-size:12px">Nu s-au putut încărca sosirile.</span>`;
+    }
+  }
+}
+
 map.on("load", () => {
   tuneDark();
   fitMapCanvas();
@@ -950,6 +1465,70 @@ map.on("load", () => {
     paint: { "line-color": "#07080c", "line-width": 7, "line-opacity": 0.85 } });
   map.addLayer({ id: "route-line", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
     paint: { "line-color": ["get", "color"], "line-width": 3.5, "line-opacity": 0.92 } });
+
+  // Transit Stops Source & Layers
+  map.addSource("stops", {
+    type: "geojson",
+    data: "/api/stops",
+    tolerance: 0.5
+  });
+
+  map.addLayer({
+    id: "stops-halo",
+    type: "circle",
+    source: "stops",
+    minzoom: 12.8,
+    paint: {
+      "circle-radius": [
+        "interpolate", ["linear"], ["zoom"],
+        13, 3.5,
+        15, 5.5,
+        17, 8
+      ],
+      "circle-color": "rgba(12, 14, 18, 0.9)",
+      "circle-stroke-width": 1.5,
+      "circle-stroke-color": "rgba(255, 255, 255, 0.45)",
+      "circle-opacity": [
+        "interpolate", ["linear"], ["zoom"],
+        12.8, 0,
+        13.2, 0.95
+      ],
+      "circle-stroke-opacity": [
+        "interpolate", ["linear"], ["zoom"],
+        12.8, 0,
+        13.2, 0.95
+      ]
+    }
+  }, firstSymbol);
+
+  map.addLayer({
+    id: "stops-core",
+    type: "circle",
+    source: "stops",
+    minzoom: 12.8,
+    paint: {
+      "circle-radius": [
+        "interpolate", ["linear"], ["zoom"],
+        13, 2,
+        15, 3.5,
+        17, 5.5
+      ],
+      "circle-color": "#4c8dff",
+      "circle-opacity": [
+        "interpolate", ["linear"], ["zoom"],
+        12.8, 0,
+        13.2, 1
+      ]
+    }
+  }, firstSymbol);
+
+  map.on("mouseenter", "stops-core", () => { map.getCanvas().style.cursor = "pointer"; });
+  map.on("mouseleave", "stops-core", () => { map.getCanvas().style.cursor = ""; });
+  map.on("mouseenter", "stops-halo", () => { map.getCanvas().style.cursor = "pointer"; });
+  map.on("mouseleave", "stops-halo", () => { map.getCanvas().style.cursor = ""; });
+
+  map.on("click", "stops-core", onStopClick);
+  map.on("click", "stops-halo", onStopClick);
   hexReady = true;
   mapReady = true;
   syncScale();
@@ -1042,7 +1621,8 @@ function ingest(data) {
     Object.assign(s, {
       line: v.line, type: v.type || "bus", long: v.long || "", headsign: v.headsign || "",
       label: v.label || "", plate: v.plate || "", stop: v.stop || "", status: v.status || "",
-      speedKmh: v.speedKmh, bearing: v.bearing, ts: v.ts
+      speedKmh: v.speedKmh, bearing: v.bearing, ts: v.ts,
+      stopId: v.stopId || "", nextStopEta: v.nextStopEta || null
     });
     paintMarker(s);
   }
@@ -1115,9 +1695,22 @@ function vehicleLine(s) {
   if (s.label && s.label !== s.line) bits.push("nr. " + s.label);
   if (s.plate) bits.push(s.plate);
   if (s.speedKmh != null) bits.push(s.speedKmh + " km/h");
-  const where = s.stop && STATUS_RO[s.status] ? `${STATUS_RO[s.status]} ${s.stop}` : (s.stop ? s.stop : "");
+  
+  let where = "";
+  if (s.nextStopEta && s.nextStopEta.stopName) {
+    where = `Următoarea stație: ${s.nextStopEta.stopName} · ${s.nextStopEta.etaText}`;
+  } else if (s.stop) {
+    where = STATUS_RO[s.status] ? `${STATUS_RO[s.status]} ${s.stop}` : s.stop;
+  }
   const dest = s.headsign ? `spre ${s.headsign}` : "";
   return [bits.join(" · "), dest, where, ageText(s.ts)].filter(Boolean).join(" · ");
+}
+
+function terminiFancy(long) {
+  if (!long) return "";
+  const parts = long.split(/\s+-\s+/);
+  if (parts.length >= 2) return parts[0].trim() + "  ➔  " + parts[parts.length - 1].trim();
+  return long;
 }
 
 function applyFilters() {
@@ -1159,9 +1752,49 @@ function applyFilters() {
     : type === "bus" ? `Autobuz ${selectedLine}`
     : `Linia ${selectedLine}`;
   $("cardTitle").textContent = title;
-  $("cardSub").textContent = long ? termini(long) : (count ? `${count} pe traseu` : "Fără traseu desenat");
-  const live = `${count} ${count === 1 ? "vehicul live" : "vehicule live"}`;
-  $("cardMeta").textContent = focused ? vehicleLine(focused) : (count ? `${live} · atinge un vehicul pe hartă` : "Niciun vehicul live acum");
+  $("cardSub").textContent = long ? terminiFancy(long) : (count ? `${count} pe traseu` : "Fără traseu desenat");
+  
+  // ── Info grid (only when focused on a specific vehicle) ──
+  const infoGrid = $("cardInfoGrid");
+  const nextStopSection = $("cardNextStop");
+  const statusBar = $("cardStatusBar");
+
+  if (focused) {
+    // Show vehicle details grid
+    $("cardInfoLabel").textContent = (focused.label && focused.label !== focused.line) ? focused.label : "–";
+    $("cardInfoPlate").textContent = focused.plate || "–";
+    $("cardInfoSpeed").textContent = focused.speedKmh != null ? (focused.speedKmh + " km/h") : (focused.status === "stopped" ? "Oprit" : "–");
+    infoGrid.classList.add("visible");
+
+    // Show next stop
+    if (focused.nextStopEta && focused.nextStopEta.stopName) {
+      $("cardNsName").textContent = focused.nextStopEta.stopName;
+      const nsEta = $("cardNsEta");
+      const isAtStop = focused.nextStopEta.etaText === "În stație";
+      nsEta.textContent = focused.nextStopEta.etaText;
+      nsEta.className = "card-ns-eta" + (isAtStop ? " atStop" : "");
+      nextStopSection.classList.add("visible");
+    } else if (focused.stop) {
+      const statusLabel = STATUS_RO[focused.status] || "";
+      $("cardNsName").textContent = focused.stop;
+      const nsEta = $("cardNsEta");
+      nsEta.textContent = statusLabel || "—";
+      nsEta.className = "card-ns-eta" + (focused.status === "stopped" ? " atStop" : "");
+      nextStopSection.classList.add("visible");
+    } else {
+      nextStopSection.classList.remove("visible");
+    }
+
+    // Status bar with signal age
+    const dest = focused.headsign ? `spre ${focused.headsign}` : "";
+    const age = ageText(focused.ts);
+    $("cardStatusText").textContent = [dest, age].filter(Boolean).join(" · ") || "Activ pe traseu";
+  } else {
+    infoGrid.classList.remove("visible");
+    nextStopSection.classList.remove("visible");
+    const live = `${count} ${count === 1 ? "vehicul live" : "vehicule live"}`;
+    $("cardStatusText").textContent = count ? `${live} · atinge un vehicul pe hartă` : "Niciun vehicul live acum";
+  }
   
   const followBtn = $("follow");
   followBtn.disabled = !focused;
@@ -1171,6 +1804,32 @@ function applyFilters() {
 
   card.style.display = "flex";
   updateHex();
+
+  if (mapReady && map.getLayer("stops-core")) {
+    if (selectedLine) {
+      const linePattern = "," + selectedLine + ",";
+      map.setPaintProperty("stops-core", "circle-color", [
+        "case",
+        ["in", linePattern, ["get", "lineList"]],
+        colorOf(typeOfLine(selectedLine)),
+        "rgba(140, 150, 165, 0.45)"
+      ]);
+      map.setPaintProperty("stops-core", "circle-radius", [
+        "interpolate", ["linear"], ["zoom"],
+        13, ["case", ["in", linePattern, ["get", "lineList"]], 3.2, 1.6],
+        15, ["case", ["in", linePattern, ["get", "lineList"]], 5.2, 2.5],
+        17, ["case", ["in", linePattern, ["get", "lineList"]], 7.5, 3.8]
+      ]);
+    } else {
+      map.setPaintProperty("stops-core", "circle-color", "#4c8dff");
+      map.setPaintProperty("stops-core", "circle-radius", [
+        "interpolate", ["linear"], ["zoom"],
+        13, 2,
+        15, 3.5,
+        17, 5.5
+      ]);
+    }
+  }
 }
 
 function typeOfLine(name) {
@@ -1247,6 +1906,10 @@ function clearSelection() {
   selectedLine = null;
   selectedId = null;
   stopFollow();
+  if (currentStopPopup) {
+    currentStopPopup.remove();
+    currentStopPopup = null;
+  }
   if (query) {
     query = "";
     $("q").value = "";
@@ -1460,6 +2123,10 @@ map.on("click", () => {
   if ($("suggest").style.display === "flex") $("suggest").style.display = "none";
   $("q").blur();
   if ($("sheet").style.display === "flex") closeSheet();
+  if (currentStopPopup) {
+    currentStopPopup.remove();
+    currentStopPopup = null;
+  }
 
   // Tap anywhere on the map: deselect, zoom out, remain in the tracked vehicle's zone
   if (selectedLine || selectedId) {

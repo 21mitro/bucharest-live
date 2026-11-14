@@ -15,6 +15,8 @@ const POLL_MS = 5_000;
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data");
 const LINES_FILE = path.join(DATA_DIR, "lines.json");
+const STOPS_GEOJSON_FILE = path.join(DATA_DIR, "stops.geojson");
+const STOPS_JSON_FILE = path.join(DATA_DIR, "stops.json");
 const ZIP_FILE = path.join(DATA_DIR, "gtfs.zip");
 const ZIP_MAX_AGE = 12 * 60 * 60 * 1000;
 
@@ -22,6 +24,8 @@ let routes = {}; // route_id -> { name, long, type }
 let byName = {}; // short name -> { id, name, long, type, paths }
 let trips = Object.create(null); // trip_id -> { headsign, direction }
 let stops = Object.create(null); // stop_id -> name
+let stopsDetails = Object.create(null); // stop_id -> { id, name, lat, lng, lines, dirs }
+let stopsGeoJsonBuffer = null;
 let vehicles = [];
 let lastUpdate = null;
 let lastError = null;
@@ -113,6 +117,43 @@ function roundPath(points) {
 
 function emptyLines() {
   return { tram: [], bus: [], trolleybus: [], night: [], metro: [], other: [] };
+}
+
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
+function estimateEtaMinutes(distMeters, vehicleSpeedKmh, vehicleType) {
+  let defaultSpeed = 16;
+  if (vehicleType === "tram") defaultSpeed = 17;
+  else if (vehicleType === "night") defaultSpeed = 24;
+  else if (vehicleType === "metro") defaultSpeed = 35;
+
+  const effSpeed = vehicleSpeedKmh && vehicleSpeedKmh > 5
+    ? (vehicleSpeedKmh * 0.4 + defaultSpeed * 0.6)
+    : defaultSpeed;
+
+  const metersPerMin = (effSpeed * 1000) / 60;
+  return Math.max(0, Math.round(distMeters / metersPerMin));
+}
+
+function formatEtaText(distMeters, etaMinutes, isAtStation) {
+  if (isAtStation || distMeters < 55) {
+    return "În stație";
+  }
+  if (etaMinutes <= 1 || distMeters < 350) {
+    return "Sosire estimată în ~1 min";
+  }
+  return `Sosire estimată în ${etaMinutes} min`;
 }
 
 async function fetchZip() {
@@ -210,6 +251,11 @@ function applyStatic(buf) {
   stops = nextStops;
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(LINES_FILE, JSON.stringify({ updated: new Date().toISOString(), lines }, null, 2));
+
+  if (!stopsGeoJsonBuffer || !Object.keys(stopsDetails).length || !fs.existsSync(STOPS_GEOJSON_FILE)) {
+    processStops(zip, nextRoutes, tripRows, stopRows);
+  }
+
   const shaped = Object.values(nextByName).filter((r) => r.paths.length).length;
   console.log(
     "Lines saved:",
@@ -218,8 +264,94 @@ function applyStatic(buf) {
   );
 }
 
+function processStops(zip, nextRoutes, tripRows, stopRows) {
+  try {
+    const routeNames = new Map();
+    for (const r of Object.values(nextRoutes)) routeNames.set(r.id, r.name);
+
+    const tripInfo = new Map();
+    for (const t of tripRows) {
+      tripInfo.set(t.trip_id, {
+        line: routeNames.get(t.route_id),
+        dir: Number(t.direction_id)
+      });
+    }
+
+    const data = zip.readAsText("stop_times.txt");
+    const firstLf = data.indexOf("\n");
+    if (firstLf === -1) return;
+    const header = data.substring(0, firstLf).split(",").map((s) => s.trim());
+    const tripIdx = header.indexOf("trip_id");
+    const stopIdx = header.indexOf("stop_id");
+    if (tripIdx === -1 || stopIdx === -1) return;
+
+    const stopLines = new Map();
+    let start = firstLf + 1;
+    while (start < data.length) {
+      let end = data.indexOf("\n", start);
+      if (end === -1) end = data.length;
+      const line = data.substring(start, end).trim();
+      start = end + 1;
+      if (!line) continue;
+      const parts = line.split(",");
+      const sid = parts[stopIdx];
+      const t = tripInfo.get(parts[tripIdx]);
+      if (!t || !t.line) continue;
+      let sMap = stopLines.get(sid);
+      if (!sMap) stopLines.set(sid, (sMap = new Map()));
+      let dirSet = sMap.get(t.line);
+      if (!dirSet) sMap.set(t.line, (dirSet = new Set()));
+      dirSet.add(t.dir);
+    }
+
+    const stopsDict = {};
+    const features = [];
+    for (const s of stopRows) {
+      const sid = s.stop_id;
+      const sMap = stopLines.get(sid);
+      if (!sMap || !sMap.size) continue;
+      if (s.location_type && s.location_type !== "0") continue;
+      const lat = Math.round(Number(s.stop_lat) * 1e5) / 1e5;
+      const lng = Math.round(Number(s.stop_lon) * 1e5) / 1e5;
+      if (!lat || !lng) continue;
+
+      const lines = [...sMap.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+      const dirs = {};
+      for (const [l, dSet] of sMap) dirs[l] = [...dSet].sort();
+
+      stopsDict[sid] = { id: sid, name: s.stop_name.trim(), lat, lng, lines, dirs };
+      features.push({
+        type: "Feature",
+        id: sid,
+        geometry: { type: "Point", coordinates: [lng, lat] },
+        properties: {
+          id: sid,
+          name: s.stop_name.trim(),
+          lines: lines.join(", "),
+          lineList: "," + lines.join(",") + ",",
+          lineCount: lines.length
+        }
+      });
+    }
+
+    const geoJson = { type: "FeatureCollection", features };
+    fs.writeFileSync(STOPS_JSON_FILE, JSON.stringify(stopsDict));
+    fs.writeFileSync(STOPS_GEOJSON_FILE, JSON.stringify(geoJson));
+    stopsDetails = stopsDict;
+    stopsGeoJsonBuffer = Buffer.from(JSON.stringify(geoJson));
+    console.log("Stops saved:", features.length, "passenger stops");
+  } catch (err) {
+    console.error("Failed to process stops:", err.message);
+  }
+}
+
 async function loadStatic() {
   try {
+    if (fs.existsSync(STOPS_GEOJSON_FILE) && fs.existsSync(STOPS_JSON_FILE)) {
+      stopsGeoJsonBuffer = fs.readFileSync(STOPS_GEOJSON_FILE);
+      stopsDetails = JSON.parse(fs.readFileSync(STOPS_JSON_FILE, "utf8"));
+      console.log("Stops loaded from cache:", Object.keys(stopsDetails).length);
+    }
     const buf = await zipBuffer();
     try {
       applyStatic(buf);
@@ -257,6 +389,22 @@ async function pollVehicles() {
         const trip = (v.trip && trips[v.trip.tripId]) || {};
         const speed = hasField(v.position, "speed") ? asNum(v.position.speed) : null;
         const bearing = hasField(v.position, "bearing") ? asNum(v.position.bearing) : null;
+        const rawStopId = v.stopId || "";
+        const stopName = rawStopId ? stops[rawStopId] || "" : "";
+        let nextStopEta = null;
+        const nextStop = stopsDetails[rawStopId];
+        if (nextStop && v.position.latitude && v.position.longitude) {
+          const d = haversineMeters(v.position.latitude, v.position.longitude, nextStop.lat, nextStop.lng);
+          const minutes = estimateEtaMinutes(d, speed != null && speed > 0.4 ? Math.round(speed * 3.6) : null, route.type);
+          const isAtStation = v.currentStatus === 1 || d < 60;
+          nextStopEta = {
+            stopId: rawStopId,
+            stopName: nextStop.name,
+            distanceMeters: d,
+            etaMinutes: minutes,
+            etaText: formatEtaText(d, minutes, isAtStation)
+          };
+        }
         return {
           id: v.vehicle?.id || e.id,
           label: v.vehicle?.label || "",
@@ -271,8 +419,10 @@ async function pollVehicles() {
           lng: v.position.longitude,
           bearing,
           speedKmh: speed != null && speed > 0.4 ? Math.round(speed * 3.6) : null,
-          stop: v.stopId ? stops[v.stopId] || "" : "",
+          stopId: rawStopId,
+          stop: stopName,
           status: STOP_STATUS[v.currentStatus] || "",
+          nextStopEta,
           ts: asNum(v.timestamp),
         };
       });
@@ -363,6 +513,83 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/api/vehicles", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.json({ updated: lastUpdate, error: lastError, count: vehicles.length, vehicles });
+});
+app.get("/api/stops", (_req, res) => {
+  if (stopsGeoJsonBuffer) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.send(stopsGeoJsonBuffer);
+  }
+  if (fs.existsSync(STOPS_GEOJSON_FILE)) {
+    stopsGeoJsonBuffer = fs.readFileSync(STOPS_GEOJSON_FILE);
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.send(stopsGeoJsonBuffer);
+  }
+  res.status(503).json({ error: "Stațiile nu sunt încă disponibile" });
+});
+app.get("/api/eta", (req, res) => {
+  const stopId = (req.query.stopId || "").trim();
+  if (!stopId) return res.status(400).json({ error: "Parametrul stopId este obligatoriu" });
+
+  const stop = stopsDetails[stopId];
+  if (!stop) return res.status(404).json({ error: "Stație negăsită" });
+
+  const filterLine = req.query.line ? req.query.line.trim() : null;
+  const filterVehicle = req.query.vehicleId ? req.query.vehicleId.trim() : null;
+
+  const arrivals = [];
+  for (const v of vehicles) {
+    if (!v.lat || !v.lng) continue;
+    if (filterVehicle && v.id !== filterVehicle) continue;
+    if (filterLine && v.line !== filterLine) continue;
+
+    const validDirs = stop.dirs ? stop.dirs[v.line] : null;
+    const isDirectStop = v.stopId === stopId;
+    if (!validDirs && !isDirectStop) continue;
+
+    if (validDirs && v.direction != null && !validDirs.includes(v.direction) && !isDirectStop) {
+      continue;
+    }
+
+    const distMeters = haversineMeters(v.lat, v.lng, stop.lat, stop.lng);
+    if (distMeters > 12000) continue;
+
+    const isAtStation = isDirectStop && (v.status === "stopped" || distMeters < 60);
+    const etaMinutes = estimateEtaMinutes(distMeters, v.speedKmh, v.type);
+    const etaText = formatEtaText(distMeters, etaMinutes, isAtStation);
+
+    arrivals.push({
+      vehicleId: v.id,
+      label: v.label,
+      plate: v.plate,
+      line: v.line,
+      type: v.type,
+      headsign: v.headsign,
+      direction: v.direction,
+      distMeters,
+      speedKmh: v.speedKmh,
+      status: v.status,
+      isDirectStop,
+      etaMinutes,
+      etaText,
+    });
+  }
+
+  arrivals.sort((a, b) => a.distMeters - b.distMeters);
+
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.json({
+    stop: {
+      id: stop.id,
+      name: stop.name,
+      lat: stop.lat,
+      lng: stop.lng,
+      lines: stop.lines,
+    },
+    count: arrivals.length,
+    arrivals: arrivals.slice(0, 15),
+  });
 });
 app.get("/api/lines", (req, res) => {
   try { res.json(JSON.parse(fs.readFileSync(LINES_FILE, "utf8"))); }
